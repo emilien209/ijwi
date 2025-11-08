@@ -26,7 +26,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useDictionary } from "@/hooks/use-dictionary";
-import { placeholderImages } from "@/lib/placeholder-images.json";
+import { placeholderImages } from "@/lib/placeholder-images";
 import { PlusCircle, Trash2, User } from "lucide-react";
 
 const formSchema = z.object({

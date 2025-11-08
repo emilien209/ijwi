@@ -102,6 +102,12 @@ export const fr: Dictionary = {
     noCandidates: "Aucun candidat n'a encore été ajouté.",
   },
 
+  results: {
+    title: "Résultats de l'Élection",
+    description: "L'élection est terminée. Voici les résultats finaux.",
+    totalVotes: "Total des Votes",
+  },
+
   fraud: {
     title: "Assistant de Détection de Fraude",
     description: "Analysez les données de vote pour des anomalies potentielles en utilisant l'IA.",

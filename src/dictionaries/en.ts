@@ -100,6 +100,12 @@ export const en = {
     noCandidates: "No candidates have been added yet.",
   },
 
+  results: {
+    title: "Election Results",
+    description: "The election has concluded. Here are the final results.",
+    totalVotes: "Total Votes",
+  },
+
   fraud: {
     title: "Fraud Detection Assistant",
     description: "Analyze voting data for potential anomalies using AI.",

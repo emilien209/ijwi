@@ -10,6 +10,7 @@ import { LanguageSwitcher } from "./language-switcher";
 
 const navLinks = [
     { href: "/dashboard", key: "navDashboard" },
+    { href: "/results", key: "navResults" },
     { href: "/verify", key: "navVerify" },
     { href: "/admin", key: "navAdmin" },
 ];

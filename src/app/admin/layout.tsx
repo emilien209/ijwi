@@ -9,6 +9,7 @@ import {
   Shield,
   Users,
   LogOut,
+  Vote,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -90,7 +91,7 @@ export default function AdminLayout({
         <Sidebar>
             <SidebarHeader>
                  <div className="flex items-center gap-2 p-2">
-                    <Shield className="h-6 w-6 text-primary" />
+                    <Vote className="h-6 w-6 text-primary" />
                     <span className="font-bold">{dict.admin.title}</span>
                 </div>
             </SidebarHeader>

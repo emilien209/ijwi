@@ -102,6 +102,12 @@ export const kin: Dictionary = {
     noCandidates: "Nta mukandida urongerwamo.",
   },
 
+  results: {
+    title: "Ibyavuye mu Matora",
+    description: "Amatora yarangiye. Dore ibyavuyemo.",
+    totalVotes: "Amajwi Yose Hamwe",
+  },
+
   fraud: {
     title: "Ubufasha mu Kugenzura Uburiganya",
     description: "Sesengura amakuru y'itora ukoresheje AI kugira ngo umenye ibishobora kuba uburiganya.",
