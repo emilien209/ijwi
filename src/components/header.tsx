@@ -10,7 +10,7 @@ import { LanguageSwitcher } from "./language-switcher";
 
 const navLinks = [
     { href: "/dashboard", key: "navDashboard" },
-    { href: "/admin/results", key: "navResults" },
+    { href: "/results", key: "navResults" },
     { href: "/verify", key: "navVerify" },
     { href: "/admin", key: "navAdmin" },
 ];
@@ -36,7 +36,9 @@ export function Header() {
                     className={cn(
                         "transition-colors hover:text-primary",
                         pathname.startsWith(link.href) && link.href !== '/' ? "text-primary" : "text-muted-foreground",
-                        pathname === '/' && link.href === '/' && "text-primary"
+                        pathname === '/' && link.href === '/' && "text-primary",
+                         // Handle nested admin routes
+                        link.href === '/admin' && pathname.startsWith('/admin/') ? "text-primary" : ""
                     )}
                 >
                     {dict[link.key as keyof typeof dict]}
