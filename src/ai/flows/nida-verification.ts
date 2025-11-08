@@ -13,7 +13,7 @@ import { z } from 'genkit';
 
 const NidaVerificationInputSchema = z.object({
   nationalId: z.string().length(16, "National ID must be 16 digits.").describe("The 16-digit national ID number to verify."),
-  dob: z.date().describe("The user's date of birth."),
+  dob: z.string().describe("The user's date of birth as a YYYY-MM-DD string."),
 });
 export type NidaVerificationInput = z.infer<typeof NidaVerificationInputSchema>;
 
@@ -27,8 +27,8 @@ export type NidaVerificationOutput = z.infer<typeof NidaVerificationOutputSchema
 const checkNidaDatabaseTool = ai.defineTool(
     {
         name: 'checkNidaDatabase',
-        description: 'Checks if a Rwandan National ID and Date of Birth match in a mock NIDA database. For this simulation, all 16-digit numbers are considered valid and the year of birth must match the one in the ID.',
-        inputSchema: z.object({ nationalId: z.string(), dob: z.date() }),
+        description: 'Checks if a Rwandan National ID and Date of Birth (as YYYY-MM-DD string) match in a mock NIDA database. For this simulation, all 16-digit numbers are considered valid and the year of birth must match the one in the ID.',
+        inputSchema: z.object({ nationalId: z.string(), dob: z.string() }),
         outputSchema: z.object({
             isRegistered: z.boolean(),
             fullName: z.string().optional(),
@@ -43,7 +43,7 @@ const checkNidaDatabaseTool = ai.defineTool(
         }
 
         const birthYearFromId = parseInt(input.nationalId.substring(1, 5));
-        const birthYearFromDob = input.dob.getFullYear();
+        const birthYearFromDob = new Date(input.dob).getFullYear();
 
         // The core of our mock verification: does the year from the ID match the year from the DOB?
         if (birthYearFromId === birthYearFromDob) {

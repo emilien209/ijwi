@@ -55,7 +55,7 @@ export default function LoginPage() {
 
     const result = await handleNidaVerification({
       nationalId: values.nationalId,
-      dob: new Date(values.dob),
+      dob: values.dob,
     });
 
     if (result.success && result.data) {
