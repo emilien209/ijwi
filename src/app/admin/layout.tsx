@@ -45,17 +45,13 @@ export default function AdminLayout({
   const pathname = usePathname();
   const router = useRouter();
   const { dict } = useDictionary();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
   useEffect(() => {
-    setIsMounted(true);
-    if (typeof window !== 'undefined') {
-        const hasToken = !!sessionStorage.getItem(ADMIN_AUTH_TOKEN);
-        setIsAuthenticated(hasToken);
-        if (!hasToken && pathname !== '/admin/auth') {
-            router.replace('/admin/auth');
-        }
+    const hasToken = !!sessionStorage.getItem(ADMIN_AUTH_TOKEN);
+    setIsAuthenticated(hasToken);
+    if (!hasToken && pathname !== '/admin/auth') {
+        router.replace('/admin/auth');
     }
   }, [pathname, router]);
   
@@ -65,7 +61,7 @@ export default function AdminLayout({
     router.replace('/admin/auth');
   }
 
-  if (!isMounted) {
+  if (isAuthenticated === null) {
       return (
           <div className="flex min-h-screen items-center justify-center">
               <p>Loading...</p>
