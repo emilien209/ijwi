@@ -19,6 +19,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { useCollection } from "@/firebase";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
 
@@ -45,8 +46,6 @@ export default function ElectionResultsPage() {
     }));
   }, [votes]);
 
-  const electionStatus = "ended"; // "active" or "ended"
-
   return (
     <div className="container mx-auto py-8 px-4">
       <Card className="w-full max-w-4xl mx-auto shadow-2xl">
@@ -57,7 +56,11 @@ export default function ElectionResultsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="h-[500px]">
-          { votesLoading ? <div>Loading...</div> :
+          { votesLoading ? (
+            <div className="flex items-center justify-center h-full">
+              <Skeleton className="w-full h-[450px]" />
+            </div>
+            ) :
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie

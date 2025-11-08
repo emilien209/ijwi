@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import Link from 'next/link';
 import { useCollection } from "@/firebase";
 import { useMemo } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Vote {
     candidateId: string;
@@ -56,6 +57,8 @@ export default function AdminDashboardPage() {
   }, [votes, candidates]);
 
   const totalVotes = useMemo(() => electionData.reduce((acc, curr) => acc + curr.votes, 0), [electionData]);
+  
+  const isLoading = votesLoading || candidatesLoading;
 
   return (
     <div className="space-y-8">
@@ -71,7 +74,7 @@ export default function AdminDashboardPage() {
                 <CardTitle>{dict.admin.totalVotes}</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-4xl font-bold">{votesLoading ? '...' : totalVotes.toLocaleString()}</p>
+                 {isLoading ? <Skeleton className="h-10 w-1/2" /> : <p className="text-4xl font-bold">{totalVotes.toLocaleString()}</p>}
               </CardContent>
             </Card>
             <Card>
@@ -79,9 +82,11 @@ export default function AdminDashboardPage() {
                 <CardTitle>{dict.admin.electionStatus}</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className={`text-4xl font-bold ${electionStatus === 'active' ? 'text-green-600' : 'text-destructive'}`}>
-                    {electionStatus === 'active' ? dict.admin.statusActive : dict.admin.statusEnded}
-                </p>
+                 {isLoading ? <Skeleton className="h-10 w-1/2" /> :
+                    <p className={`text-4xl font-bold ${electionStatus === 'active' ? 'text-green-600' : 'text-destructive'}`}>
+                        {electionStatus === 'active' ? dict.admin.statusActive : dict.admin.statusEnded}
+                    </p>
+                 }
               </CardContent>
             </Card>
              <Card>
@@ -103,7 +108,11 @@ export default function AdminDashboardPage() {
         </CardHeader>
         <CardContent className="h-[400px]">
           <ResponsiveContainer width="100%" height="100%">
-            { (votesLoading || candidatesLoading) ? <div>Loading...</div> :
+            { isLoading ? (
+              <div className="flex items-center justify-center h-full">
+                <Skeleton className="w-full h-[350px]" />
+              </div>
+            ) :
             <BarChart
               data={electionData}
               margin={{ top: 5, right: 30, left: 20, bottom: 5 }}

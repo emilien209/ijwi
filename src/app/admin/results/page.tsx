@@ -19,6 +19,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { useCollection } from "@/firebase";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
 
@@ -59,7 +60,11 @@ export default function ElectionResultsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="h-[500px]">
-          { votesLoading ? <div>Loading...</div> :
+          { votesLoading ? (
+            <div className="flex items-center justify-center h-full">
+              <Skeleton className="w-full h-[450px]" />
+            </div>
+           ) :
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
