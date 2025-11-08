@@ -64,6 +64,8 @@ export default function VotePage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [openGroup, setOpenGroup] = useState<string | null>(null);
   const [votedGroups, setVotedGroups] = useState<string[]>([]);
+  const [nationalId, setNationalId] = useState<string | null>(null);
+  const [authChecked, setAuthChecked] = useState(false);
 
   const router = useRouter();
   const { toast } = useToast();
@@ -75,8 +77,6 @@ export default function VotePage() {
   const { data: electionSettings, isLoading: settingsLoading } = useDoc<ElectionSettings>('settings/election');
   
   const electionStatus = electionSettings?.status || "active";
-
-  const [nationalId, setNationalId] = useState<string | null>(null);
 
   useEffect(() => {
     const id = sessionStorage.getItem('nationalId');
@@ -90,10 +90,11 @@ export default function VotePage() {
     } else {
       setNationalId(id);
     }
+    setAuthChecked(true);
   }, [router, toast]);
 
   useEffect(() => {
-    if (!nationalId || !db || !groups) return;
+    if (!nationalId || !db || !groups || !authChecked) return;
 
     const fetchVotedGroups = async () => {
         const voted: string[] = [];
@@ -108,7 +109,7 @@ export default function VotePage() {
     };
 
     fetchVotedGroups();
-  }, [nationalId, db, groups]);
+  }, [nationalId, db, groups, authChecked]);
 
 
   const handleVoteSubmit = () => {
@@ -166,9 +167,9 @@ export default function VotePage() {
     setSelectedCandidate(candidate);
   }
   
-  const isLoadingAnything = candidatesLoading || groupsLoading || settingsLoading;
+  const isLoadingAnything = candidatesLoading || groupsLoading || settingsLoading || !authChecked;
 
-  if (electionStatus === 'ended') {
+  if (electionStatus === 'ended' && !settingsLoading) {
     return (
         <div className="container mx-auto py-8 px-4">
             <Card className="w-full max-w-4xl mx-auto shadow-2xl text-center">
