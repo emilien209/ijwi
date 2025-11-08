@@ -20,6 +20,7 @@ export type NidaVerificationInput = z.infer<typeof NidaVerificationInputSchema>;
 const NidaVerificationOutputSchema = z.object({
   isValid: z.boolean().describe("Whether the national ID is valid and exists in the NIDA database."),
   fullName: z.string().optional().describe("The full name of the citizen if the ID is valid."),
+  reason: z.string().optional().describe("The reason for failure, if any.")
 });
 export type NidaVerificationOutput = z.infer<typeof NidaVerificationOutputSchema>;
 
@@ -32,6 +33,7 @@ const checkNidaDatabaseTool = ai.defineTool(
         outputSchema: z.object({
             isRegistered: z.boolean(),
             fullName: z.string().optional(),
+            reason: z.enum(["ID_DOB_MISMATCH", "NOT_FOUND", "VALID"]).optional(),
         })
     },
     async (input) => {
@@ -39,25 +41,25 @@ const checkNidaDatabaseTool = ai.defineTool(
         // For this demo, we simulate this.
         const isValidFormat = input.nationalId.length === 16 && /^\d+$/.test(input.nationalId);
         if (!isValidFormat) {
-            return { isRegistered: false };
+            return { isRegistered: false, reason: "NOT_FOUND" };
         }
 
         const birthYearFromId = parseInt(input.nationalId.substring(1, 5));
         const birthYearFromDob = new Date(input.dob).getFullYear();
 
-        // The core of our mock verification: does the year from the ID match the year from the DOB?
-        if (birthYearFromId === birthYearFromDob) {
-            // Simulate a name based on the ID for demo purposes
-             const names = ["Mugisha Jean Claude", "Uwamahoro Marie", "Ntaganda Paul", "Mukeshimana Alice", "Hakizimana Emmanuel"];
-             const randomIndex = parseInt(input.nationalId.slice(-1)) % names.length;
-
-            return {
-                isRegistered: true,
-                fullName: names[randomIndex],
-            };
+        if (birthYearFromId !== birthYearFromDob) {
+            return { isRegistered: false, reason: "ID_DOB_MISMATCH" };
         }
 
-        return { isRegistered: false };
+        // Simulate a name based on the ID for demo purposes
+        const names = ["Mugisha Jean Claude", "Uwamahoro Marie", "Ntaganda Paul", "Mukeshimana Alice", "Hakizimana Emmanuel"];
+        const randomIndex = parseInt(input.nationalId.slice(-1)) % names.length;
+
+        return {
+            isRegistered: true,
+            fullName: names[randomIndex],
+            reason: "VALID"
+        };
     }
 );
 
@@ -70,7 +72,7 @@ const prompt = ai.definePrompt({
   name: 'nidaVerificationPrompt',
   input: { schema: NidaVerificationInputSchema },
   output: { schema: NidaVerificationOutputSchema },
-  system: "You are a citizen identity verification agent for the National Identification Agency (NIDA) of Rwanda. Your task is to use the provided tool to check if a national ID and date of birth are registered and then format the output.",
+  system: "You are a citizen identity verification agent for the National Identification Agency (NIDA) of Rwanda. Your task is to use the provided tool to check if a national ID and date of birth are registered. If verification fails, you must provide the reason. Then format the output.",
   tools: [checkNidaDatabaseTool]
 });
 
@@ -81,7 +83,18 @@ const nidaVerificationFlow = ai.defineFlow(
     outputSchema: NidaVerificationOutputSchema,
   },
   async (input) => {
-    const { output } = await prompt(input);
-    return output!;
+    const llmResponse = await prompt(input);
+    const toolResponse = llmResponse.toolRequest?.tool?.response.output;
+
+    if (toolResponse) {
+        return {
+            isValid: toolResponse.isRegistered,
+            fullName: toolResponse.fullName,
+            reason: toolResponse.reason,
+        }
+    }
+    
+    // Fallback in case the tool isn't called
+    return llmResponse.output || { isValid: false, reason: "SERVICE_ERROR" };
   }
 );

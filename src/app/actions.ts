@@ -33,7 +33,12 @@ export async function handleNidaVerification(input: NidaVerificationInput) {
     if (result.isValid) {
       return { success: true, data: result };
     }
-    return { success: false, error: "Invalid or unregistered National ID and/or Date of Birth." };
+    // Provide a more specific error based on the reason
+    let errorMessage = "Invalid or unregistered National ID.";
+    if (result.reason === "ID_DOB_MISMATCH") {
+      errorMessage = "Irangamuntu yawe ntiri guhura n'itariki y'amavuko.";
+    }
+    return { success: false, error: errorMessage, data: result };
   } catch (error) {
     console.error("NIDA verification error:", error);
     return { success: false, error: "Could not connect to verification service." };
