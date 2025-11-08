@@ -40,9 +40,9 @@ const formSchema = z.object({
 type Candidate = { id: string, name: string, imageUrl: string };
 
 const initialCandidates: Candidate[] = [
-  { id: "1", name: "Candidate A", imageUrl: "https://picsum.photos/seed/1/150/150" },
-  { id: "2", name: "Candidate B", imageUrl: "https://picsum.photos/seed/2/150/150" },
-  { id: "3", name: "Candidate C", imageUrl: "https://picsum.photos/seed/3/150/150" },
+  { id: "1", name: "Candidate A", imageUrl: placeholderImages.find(p => p.id === 'candidate-a')?.imageUrl || "https://picsum.photos/seed/1/150/150" },
+  { id: "2", name: "Candidate B", imageUrl: placeholderImages.find(p => p.id === 'candidate-b')?.imageUrl || "https://picsum.photos/seed/2/150/150" },
+  { id: "3", name: "Candidate C", imageUrl: placeholderImages.find(p => p.id === 'candidate-c')?.imageUrl || "https://picsum.photos/seed/3/150/150" },
 ];
 
 export default function CandidatesPage() {
