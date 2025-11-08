@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -22,9 +23,9 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { useToast } from "@/hooks/use-toast";
 import { useDictionary } from "@/hooks/use-dictionary";
 import { Loader2, CheckCircle, AlertTriangle, Search } from "lucide-react";
+import { handleVerifyVote } from "@/app/actions";
 
 const formSchema = z.object({
   receipt: z.string().min(10, "Receipt code is required."),
@@ -37,7 +38,6 @@ export default function VerifyPage() {
   >(null);
 
   const { dict } = useDictionary();
-  const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -46,21 +46,19 @@ export default function VerifyPage() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     setVerificationStatus(null);
+    
+    const result = await handleVerifyVote(values.receipt);
+    
+    if (result.success) {
+      setVerificationStatus("success");
+    } else {
+      setVerificationStatus("fail");
+    }
 
-    // Simulate verification API call
-    setTimeout(() => {
-      // In a real app, you'd check this against a public, immutable ledger.
-      // We simulate success for any non-empty input for this demo.
-      if (values.receipt.length > 10) {
-        setVerificationStatus("success");
-      } else {
-        setVerificationStatus("fail");
-      }
-      setIsLoading(false);
-    }, 2000);
+    setIsLoading(false);
   }
 
   return (
