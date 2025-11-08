@@ -13,7 +13,7 @@ import {
 import { useDictionary } from "@/hooks/use-dictionary";
 import { Vote } from "lucide-react";
 import Image from "next/image";
-import { placeholderImages } from "@/lib/placeholder-images.json";
+import { placeholderImages } from "@/lib/placeholder-images";
 
 export default function DashboardPage() {
   const { dict } = useDictionary();
