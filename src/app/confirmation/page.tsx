@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Suspense } from "react";
@@ -79,10 +80,10 @@ function ConfirmationContent() {
         </p>
       </CardContent>
       <CardFooter className="flex justify-center gap-4">
-          <Link href="/verify" passHref>
+          <Link href="/verify">
              <Button className="bg-accent text-accent-foreground hover:bg-accent/90">{dict.confirmation.verifyNowButton}</Button>
           </Link>
-          <Link href="/dashboard" passHref>
+          <Link href="/dashboard">
              <Button variant="outline">{dict.confirmation.backToDashboardButton}</Button>
           </Link>
       </CardFooter>

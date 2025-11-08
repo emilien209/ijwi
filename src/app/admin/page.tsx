@@ -67,7 +67,7 @@ export default function AdminDashboardPage() {
                 <CardTitle>{dict.admin.manageCandidates}</CardTitle>
               </CardHeader>
               <CardContent>
-                <Link href="/admin/candidates" passHref>
+                <Link href="/admin/candidates">
                     <Button>{dict.admin.goToCandidates}</Button>
                 </Link>
               </CardContent>

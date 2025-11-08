@@ -53,7 +53,7 @@ export default function AdminLayout({
                 <SidebarMenu>
                     {adminNavLinks.map(link => (
                         <SidebarMenuItem key={link.href}>
-                             <Link href={link.href} passHref legacyBehavior>
+                             <Link href={link.href}>
                                 <SidebarMenuButton isActive={pathname === link.href}>
                                     <link.icon />
                                     <span>{dict[link.labelKey as keyof typeof dict]}</span>

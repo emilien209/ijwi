@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -74,7 +75,7 @@ export default function DashboardPage() {
                 </div>
             </div>
             <div className="mt-8 text-center">
-                <Link href="/vote" passHref>
+                <Link href="/vote">
                 <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90 shadow-lg transition-transform hover:scale-105">
                     <Vote className="mr-2 h-5 w-5" />
                     {dict.dashboard.voteButton}
