@@ -28,13 +28,39 @@ import { useToast } from "@/hooks/use-toast";
 import { useDictionary } from "@/hooks/use-dictionary";
 import { Loader2, ShieldCheck } from "lucide-react";
 import { handleNidaVerification } from "@/app/actions";
+import { format, parse } from 'date-fns';
+
+// This function attempts to parse a date string from various common formats
+const parseFlexibleDate = (dateString: string): Date | null => {
+  const formats = [
+    'yyyy-MM-dd',
+    'MM/dd/yyyy',
+    'dd/MM/yyyy',
+    'M/d/yy',
+    'dd-MM-yyyy',
+    'yyyy.MM.dd',
+  ];
+  for (const fmt of formats) {
+    try {
+      const parsedDate = parse(dateString, fmt, new Date());
+      if (!isNaN(parsedDate.getTime())) {
+        return parsedDate;
+      }
+    } catch (e) {
+      // Ignore parsing errors and try the next format
+    }
+  }
+  return null;
+};
+
 
 const formSchema = z.object({
   nationalId: z.string().length(16, "National ID must be 16 digits."),
-  dob: z.string().refine((val) => /^\d{4}-\d{2}-\d{2}$/.test(val), {
-    message: "Date must be in YYYY-MM-DD format.",
+  dob: z.string().refine((val) => val && parseFlexibleDate(val) !== null, {
+    message: "Invalid date format. Please use YYYY-MM-DD.",
   }),
 });
+
 
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -53,9 +79,23 @@ export default function LoginPage() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
 
+    const parsedDate = parseFlexibleDate(values.dob);
+    if (!parsedDate) {
+        // This should theoretically not be reached due to Zod validation, but as a safeguard:
+        toast({
+            variant: "destructive",
+            title: "Invalid Date",
+            description: "Please enter a valid date.",
+        });
+        setIsLoading(false);
+        return;
+    }
+    const formattedDob = format(parsedDate, 'yyyy-MM-dd');
+
+
     const result = await handleNidaVerification({
       nationalId: values.nationalId,
-      dob: values.dob,
+      dob: formattedDob,
     });
 
     if (result.success && result.data) {
