@@ -25,7 +25,7 @@ export const en = {
     loginSuccessTitle: "Login Successful",
     loginSuccessDescription: "Redirecting you to the dashboard...",
     loginErrorTitle: "Login Failed",
-    loginErrorDescription: "The OTP you entered is incorrect. Please try again.",
+    loginErrorDescription: "Invalid National ID or Date of Birth. Please try again.",
   },
 
   dashboard: {
@@ -125,5 +125,3 @@ export const en = {
     analysisErrorDescription: "An error occurred while analyzing the data.",
   }
 };
-
-    

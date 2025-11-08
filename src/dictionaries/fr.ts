@@ -27,7 +27,7 @@ export const fr: Dictionary = {
     loginSuccessTitle: "Connexion Réussie",
     loginSuccessDescription: "Redirection vers le tableau de bord...",
     loginErrorTitle: "Échec de la Connexion",
-    loginErrorDescription: "L'OTP que vous avez entré est incorrect. Veuillez réessayer.",
+    loginErrorDescription: "L'ID national ou la date de naissance est incorrect. Veuillez réessayer.",
   },
 
   dashboard: {
@@ -127,5 +127,3 @@ export const fr: Dictionary = {
     analysisErrorDescription: "Une erreur est survenue lors de l'analyse des données.",
   }
 };
-
-    

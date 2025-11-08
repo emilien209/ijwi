@@ -13,6 +13,7 @@ import { z } from 'genkit';
 
 const NidaVerificationInputSchema = z.object({
   nationalId: z.string().length(16, "National ID must be 16 digits.").describe("The 16-digit national ID number to verify."),
+  dob: z.date().describe("The user's date of birth."),
 });
 export type NidaVerificationInput = z.infer<typeof NidaVerificationInputSchema>;
 
@@ -26,8 +27,8 @@ export type NidaVerificationOutput = z.infer<typeof NidaVerificationOutputSchema
 const checkNidaDatabaseTool = ai.defineTool(
     {
         name: 'checkNidaDatabase',
-        description: 'Checks if a Rwandan National ID exists in a mock NIDA database. For this simulation, all 16-digit numbers are considered valid.',
-        inputSchema: z.object({ nationalId: z.string() }),
+        description: 'Checks if a Rwandan National ID and Date of Birth match in a mock NIDA database. For this simulation, all 16-digit numbers are considered valid and the year of birth must match the one in the ID.',
+        inputSchema: z.object({ nationalId: z.string(), dob: z.date() }),
         outputSchema: z.object({
             isRegistered: z.boolean(),
             fullName: z.string().optional(),
@@ -35,9 +36,17 @@ const checkNidaDatabaseTool = ai.defineTool(
     },
     async (input) => {
         // In a real application, this would involve a secure API call to the actual NIDA service.
-        // For this demo, we will simulate this. We'll consider any 16-digit ID valid
-        // and generate a plausible-sounding name.
-        if (input.nationalId.length === 16 && /^\d+$/.test(input.nationalId)) {
+        // For this demo, we simulate this.
+        const isValidFormat = input.nationalId.length === 16 && /^\d+$/.test(input.nationalId);
+        if (!isValidFormat) {
+            return { isRegistered: false };
+        }
+
+        const birthYearFromId = parseInt(input.nationalId.substring(1, 5));
+        const birthYearFromDob = input.dob.getFullYear();
+
+        // The core of our mock verification: does the year from the ID match the year from the DOB?
+        if (birthYearFromId === birthYearFromDob) {
             // Simulate a name based on the ID for demo purposes
              const names = ["Mugisha Jean Claude", "Uwamahoro Marie", "Ntaganda Paul", "Mukeshimana Alice", "Hakizimana Emmanuel"];
              const randomIndex = parseInt(input.nationalId.slice(-1)) % names.length;
@@ -47,6 +56,7 @@ const checkNidaDatabaseTool = ai.defineTool(
                 fullName: names[randomIndex],
             };
         }
+
         return { isRegistered: false };
     }
 );
@@ -60,7 +70,7 @@ const prompt = ai.definePrompt({
   name: 'nidaVerificationPrompt',
   input: { schema: NidaVerificationInputSchema },
   output: { schema: NidaVerificationOutputSchema },
-  system: "You are a citizen identity verification agent for the National Identification Agency (NIDA) of Rwanda. Your task is to use the provided tool to check if a national ID is registered and then format the output.",
+  system: "You are a citizen identity verification agent for the National Identification Agency (NIDA) of Rwanda. Your task is to use the provided tool to check if a national ID and date of birth are registered and then format the output.",
   tools: [checkNidaDatabaseTool]
 });
 

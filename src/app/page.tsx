@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -24,13 +25,23 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import { useToast } from "@/hooks/use-toast";
 import { useDictionary } from "@/hooks/use-dictionary";
-import { Loader2, ShieldCheck } from "lucide-react";
+import { Loader2, ShieldCheck, CalendarIcon } from "lucide-react";
 import { handleNidaVerification } from "@/app/actions";
+import { cn } from "@/lib/utils";
 
 const formSchema = z.object({
   nationalId: z.string().length(16, "National ID must be 16 digits."),
+  dob: z.date({
+    required_error: "Your date of birth is required.",
+  }),
 });
 
 export default function LoginPage() {
@@ -49,7 +60,10 @@ export default function LoginPage() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
 
-    const result = await handleNidaVerification({ nationalId: values.nationalId });
+    const result = await handleNidaVerification({
+      nationalId: values.nationalId,
+      dob: values.dob,
+    });
 
     if (result.success && result.data) {
       // Store the ID in session storage to pass to the voting page.
@@ -101,6 +115,47 @@ export default function LoginPage() {
                         disabled={isLoading}
                       />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+               <FormField
+                control={form.control}
+                name="dob"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Date of Birth</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full pl-3 text-left font-normal",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            {field.value ? (
+                              format(field.value, "PPP")
+                            ) : (
+                              <span>Pick a date</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={field.onChange}
+                          disabled={(date) =>
+                            date > new Date() || date < new Date("1900-01-01")
+                          }
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
                     <FormMessage />
                   </FormItem>
                 )}

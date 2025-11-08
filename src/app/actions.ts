@@ -33,7 +33,7 @@ export async function handleNidaVerification(input: NidaVerificationInput) {
     if (result.isValid) {
       return { success: true, data: result };
     }
-    return { success: false, error: "Invalid or unregistered National ID." };
+    return { success: false, error: "Invalid or unregistered National ID and/or Date of Birth." };
   } catch (error) {
     console.error("NIDA verification error:", error);
     return { success: false, error: "Could not connect to verification service." };

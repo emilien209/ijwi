@@ -27,7 +27,7 @@ export const kin: Dictionary = {
     loginSuccessTitle: "Winjiye neza",
     loginSuccessDescription: "Tukuyoboye ku ipaji y'itora...",
     loginErrorTitle: "Kwinjira Byanze",
-    loginErrorDescription: "OTP winjije siyo. Nyamuneka ongera ugerageze.",
+    loginErrorDescription: "Indangamuntu cyangwa Itariki y'amavuko si byo. Nyamuneka ongera ugerageze.",
   },
 
   dashboard: {
@@ -127,5 +127,3 @@ export const kin: Dictionary = {
     analysisErrorDescription: "Habaye ikosa mu gusesengura amakuru.",
   }
 };
-
-    
