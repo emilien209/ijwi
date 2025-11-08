@@ -1,0 +1,55 @@
+{
+  "entities": {
+    "candidate": {
+      "title": "Candidate",
+      "description": "An election candidate.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The full name of the candidate."
+        },
+        "imageUrl": {
+          "type": "string",
+          "format": "uri",
+          "description": "A URL pointing to a photo of the candidate."
+        }
+      },
+      "required": ["name", "imageUrl"]
+    },
+    "vote": {
+      "title": "Vote",
+      "description": "A single vote cast by a citizen.",
+      "type": "object",
+      "properties": {
+        "candidateId": {
+          "type": "string",
+          "description": "The ID of the candidate who received the vote."
+        },
+        "candidateName": {
+            "type": "string",
+            "description": "The name of the candidate who received the vote."
+        },
+        "votedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp when the vote was cast."
+        }
+      },
+      "required": ["candidateId", "candidateName", "votedAt"]
+    }
+  },
+  "auth": {
+    "providers": []
+  },
+  "firestore": {
+    "/candidates/{candidateId}": {
+      "schema": { "$ref": "#/entities/candidate" },
+      "description": "Collection of all election candidates."
+    },
+    "/votes/{nationalId}": {
+      "schema": { "$ref": "#/entities/vote" },
+      "description": "Collection where each document represents a vote cast by a unique national ID."
+    }
+  }
+}

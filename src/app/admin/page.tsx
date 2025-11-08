@@ -19,21 +19,43 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { placeholderImages } from "@/lib/placeholder-images.json";
 import { Button } from "@/components/ui/button";
 import Link from 'next/link';
+import { useCollection } from "@/firebase";
+import { useMemo } from "react";
 
-const electionData = [
-  { name: "Candidate A", votes: 456, imageId: "candidate-a" },
-  { name: "Candidate B", votes: 812, imageId: "candidate-b" },
-  { name: "Candidate C", votes: 623, imageId: "candidate-c" },
-];
+interface Vote {
+    candidateId: string;
+    candidateName: string;
+}
 
-const electionStatus = "active"; // "active" or "ended"
+interface Candidate {
+    id: string;
+    name: string;
+}
 
 export default function AdminDashboardPage() {
   const { dict } = useDictionary();
-  const totalVotes = electionData.reduce((acc, curr) => acc + curr.votes, 0);
+  const { data: votes, isLoading: votesLoading } = useCollection<Vote>('votes');
+  const { data: candidates, isLoading: candidatesLoading } = useCollection<Candidate>('candidates');
+  
+  const electionStatus = "active"; // "active" or "ended"
+
+  const electionData = useMemo(() => {
+    if (!votes || !candidates) return [];
+
+    const voteCounts = new Map<string, number>();
+    votes.forEach(vote => {
+        voteCounts.set(vote.candidateId, (voteCounts.get(vote.candidateId) || 0) + 1);
+    });
+
+    return candidates.map(candidate => ({
+        name: candidate.name,
+        votes: voteCounts.get(candidate.id) || 0,
+    }));
+  }, [votes, candidates]);
+
+  const totalVotes = useMemo(() => electionData.reduce((acc, curr) => acc + curr.votes, 0), [electionData]);
 
   return (
     <div className="space-y-8">
@@ -49,7 +71,7 @@ export default function AdminDashboardPage() {
                 <CardTitle>{dict.admin.totalVotes}</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-4xl font-bold">{totalVotes.toLocaleString()}</p>
+                <p className="text-4xl font-bold">{votesLoading ? '...' : totalVotes.toLocaleString()}</p>
               </CardContent>
             </Card>
             <Card>
@@ -81,6 +103,7 @@ export default function AdminDashboardPage() {
         </CardHeader>
         <CardContent className="h-[400px]">
           <ResponsiveContainer width="100%" height="100%">
+            { (votesLoading || candidatesLoading) ? <div>Loading...</div> :
             <BarChart
               data={electionData}
               margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
@@ -97,10 +120,10 @@ export default function AdminDashboardPage() {
               <Legend />
               <Bar dataKey="votes" fill="hsl(var(--primary))" name={dict.admin.votesLabel} />
             </BarChart>
+            }
           </ResponsiveContainer>
         </CardContent>
       </Card>
     </div>
   );
 }
-

@@ -1,6 +1,7 @@
 
 "use client";
 
+import { useMemo } from "react";
 import {
   Card,
   CardContent,
@@ -17,19 +18,34 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-
-const electionData = [
-  { name: "Candidate A", votes: 456 },
-  { name: "Candidate B", votes: 812 },
-  { name: "Candidate C", votes: 623 },
-  { name: "Abstain", votes: 150 },
-];
+import { useCollection } from "@/firebase";
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
 
+interface Vote {
+    candidateName: string;
+}
+
 export default function PublicResultsPage() {
   const { dict } = useDictionary();
-  const totalVotes = electionData.reduce((acc, curr) => acc + curr.votes, 0);
+  const { data: votes, isLoading: votesLoading } = useCollection<Vote>('votes');
+
+  const electionData = useMemo(() => {
+    if (!votes) return [];
+
+    const voteCounts = new Map<string, number>();
+    votes.forEach(vote => {
+        const name = vote.candidateName || "Abstain";
+        voteCounts.set(name, (voteCounts.get(name) || 0) + 1);
+    });
+
+    return Array.from(voteCounts.entries()).map(([name, count]) => ({
+        name,
+        votes: count,
+    }));
+  }, [votes]);
+
+  const totalVotes = useMemo(() => electionData.reduce((acc, curr) => acc + curr.votes, 0), [electionData]);
 
   return (
     <div className="container mx-auto py-8 px-4">
@@ -45,9 +61,10 @@ export default function PublicResultsPage() {
         <CardContent>
           <div className="text-center mb-8">
             <h3 className="text-lg font-semibold text-muted-foreground">{dict.results.totalVotes}</h3>
-            <p className="text-5xl font-bold text-primary">{totalVotes.toLocaleString()}</p>
+            <p className="text-5xl font-bold text-primary">{votesLoading ? '...' : totalVotes.toLocaleString()}</p>
           </div>
           <div className="h-[400px]">
+            { votesLoading ? <div>Loading...</div> :
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
@@ -100,6 +117,7 @@ export default function PublicResultsPage() {
                 <Legend />
               </PieChart>
             </ResponsiveContainer>
+            }
           </div>
         </CardContent>
       </Card>

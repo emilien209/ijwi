@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useRef } from "react";
@@ -24,9 +25,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useDictionary } from "@/hooks/use-dictionary";
-import { placeholderImages } from "@/lib/placeholder-images";
 import { PlusCircle, Trash2, User, Upload } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useFirestore, useCollection } from "@/firebase";
+import { collection, addDoc, deleteDoc, doc } from "firebase/firestore";
+import { errorEmitter } from "@/firebase/error-emitter";
+import { FirestorePermissionError } from "@/firebase/errors";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const formSchema = z.object({
   name: z.string().min(2, "Name is required."),
@@ -39,18 +44,13 @@ const formSchema = z.object({
 
 type Candidate = { id: string, name: string, imageUrl: string };
 
-const initialCandidates: Candidate[] = [
-  { id: "1", name: "Candidate A", imageUrl: placeholderImages.find(p => p.id === 'candidate-a')?.imageUrl || "https://picsum.photos/seed/1/150/150" },
-  { id: "2", name: "Candidate B", imageUrl: placeholderImages.find(p => p.id === 'candidate-b')?.imageUrl || "https://picsum.photos/seed/2/150/150" },
-  { id: "3", name: "Candidate C", imageUrl: placeholderImages.find(p => p.id === 'candidate-c')?.imageUrl || "https://picsum.photos/seed/3/150/150" },
-];
-
 export default function CandidatesPage() {
   const { dict } = useDictionary();
   const { toast } = useToast();
-  const [candidates, setCandidates] = useState<Candidate[]>(initialCandidates);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const db = useFirestore();
+  const { data: candidates, isLoading: candidatesLoading } = useCollection<Candidate>('candidates');
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -87,31 +87,61 @@ export default function CandidatesPage() {
         return;
     }
 
-    const newCandidate: Candidate = {
+    const newCandidate = {
         name: values.name,
         imageUrl: imageUrl,
-        id: `candidate-${Date.now()}`,
     };
+
+    const candidatesCol = collection(db, 'candidates');
     
-    setCandidates(prev => [...prev, newCandidate]);
-    toast({
-      title: "Candidate Added",
-      description: `${values.name} has been added to the list.`,
-    });
-    form.reset();
-    setPreviewImage(null);
-    if(fileInputRef.current) {
-        fileInputRef.current.value = "";
-    }
+    addDoc(candidatesCol, newCandidate)
+        .then(() => {
+            toast({
+              title: "Candidate Added",
+              description: `${values.name} has been added to the list.`,
+            });
+            form.reset();
+            setPreviewImage(null);
+            if(fileInputRef.current) {
+                fileInputRef.current.value = "";
+            }
+        })
+        .catch(serverError => {
+             const permissionError = new FirestorePermissionError({
+                path: candidatesCol.path,
+                operation: 'create',
+                requestResourceData: newCandidate,
+            });
+            errorEmitter.emit('permission-error', permissionError);
+             toast({
+                variant: 'destructive',
+                title: 'Error Adding Candidate',
+                description: 'You might not have permission to add candidates.',
+            });
+        });
   }
 
   const removeCandidate = (candidate: Candidate) => {
-    setCandidates(prev => prev.filter(c => c.id !== candidate.id));
-    toast({ 
-      title: "Candidate Removed", 
-      description: `${candidate.name} has been removed.`, 
-      variant: 'destructive'
-    });
+    const docRef = doc(db, 'candidates', candidate.id);
+    deleteDoc(docRef)
+        .then(() => {
+             toast({ 
+              title: "Candidate Removed", 
+              description: `${candidate.name} has been removed.`, 
+            });
+        })
+        .catch(serverError => {
+            const permissionError = new FirestorePermissionError({
+                path: docRef.path,
+                operation: 'delete',
+            });
+            errorEmitter.emit('permission-error', permissionError);
+            toast({
+                variant: 'destructive',
+                title: 'Error Removing Candidate',
+                description: 'You might not have permission to remove candidates.',
+            });
+        });
   };
 
   return (
@@ -123,7 +153,21 @@ export default function CandidatesPage() {
               <CardTitle>{dict.admin?.currentCandidates || "Current Candidates"}</CardTitle>
             </CardHeader>
             <CardContent>
-              {candidates.length > 0 ? (
+              {candidatesLoading ? (
+                 <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                    {[...Array(3)].map((_, i) => (
+                        <Card key={i} className="overflow-hidden">
+                            <Skeleton className="h-40 w-full" />
+                            <CardHeader className="p-4">
+                                <Skeleton className="h-6 w-3/4" />
+                            </CardHeader>
+                             <CardFooter className="p-4 pt-0">
+                                <Skeleton className="h-9 w-full" />
+                            </CardFooter>
+                        </Card>
+                    ))}
+                 </div>
+              ) : candidates && candidates.length > 0 ? (
                 <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                   {candidates.map((candidate) => (
                     <Card key={candidate.id} className="overflow-hidden">
@@ -134,11 +178,6 @@ export default function CandidatesPage() {
                           fill
                           className="object-cover"
                           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                          onError={(e) => {
-                            // Fallback to placeholder if image fails to load
-                            const target = e.target as HTMLImageElement;
-                            target.src = 'https://picsum.photos/seed/error/150/150';
-                          }}
                         />
                       </div>
                       <CardHeader className="p-4">
@@ -146,7 +185,7 @@ export default function CandidatesPage() {
                       </CardHeader>
                       <CardFooter className="p-4 pt-0">
                         <Button 
-                          variant="outline" 
+                          variant="destructive" 
                           size="sm" 
                           className="w-full" 
                           onClick={() => removeCandidate(candidate)}
@@ -241,7 +280,7 @@ export default function CandidatesPage() {
                                     <p className="mb-2 text-sm text-center text-muted-foreground">
                                       <span className="font-semibold">Click to upload</span> or drag and drop
                                     </p>
-                                    <p className="text-xs text-muted-foreground">PNG, JPG or GIF (MAX. 5MB)</p>
+                                    <p className="text-xs text-muted-foreground">PNG, JPG or GIF</p>
                                   </div>
                                   <Input 
                                     id="dropzone-file" 

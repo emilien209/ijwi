@@ -1,6 +1,7 @@
 
 "use client";
 
+import { useMemo } from "react";
 import {
   Card,
   CardContent,
@@ -17,18 +18,33 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-
-const electionData = [
-  { name: "Candidate A", votes: 456 },
-  { name: "Candidate B", votes: 812 },
-  { name: "Candidate C", votes: 623 },
-  { name: "Abstain", votes: 150 },
-];
+import { useCollection } from "@/firebase";
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
 
+interface Vote {
+    candidateName: string;
+}
+
 export default function ElectionResultsPage() {
   const { dict } = useDictionary();
+  const { data: votes, isLoading: votesLoading } = useCollection<Vote>('votes');
+
+  const electionData = useMemo(() => {
+    if (!votes) return [];
+
+    const voteCounts = new Map<string, number>();
+    votes.forEach(vote => {
+        const name = vote.candidateName || "Abstain";
+        voteCounts.set(name, (voteCounts.get(name) || 0) + 1);
+    });
+
+    return Array.from(voteCounts.entries()).map(([name, count]) => ({
+        name,
+        votes: count,
+    }));
+  }, [votes]);
+
   const electionStatus = "ended"; // "active" or "ended"
 
   return (
@@ -43,6 +59,7 @@ export default function ElectionResultsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="h-[500px]">
+          { votesLoading ? <div>Loading...</div> :
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
@@ -79,9 +96,9 @@ export default function ElectionResultsPage() {
               <Legend />
             </PieChart>
           </ResponsiveContainer>
+          }
         </CardContent>
       </Card>
     </div>
   );
 }
-

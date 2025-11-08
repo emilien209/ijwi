@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -18,7 +19,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogClose,
 } from "@/components/ui/dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -26,13 +26,17 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useDictionary } from "@/hooks/use-dictionary";
 import { Loader2, Vote as VoteIcon } from "lucide-react";
-import { placeholderImages } from "@/lib/placeholder-images.json";
+import { useFirestore, useCollection } from "@/firebase";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { errorEmitter } from "@/firebase/error-emitter";
+import { FirestorePermissionError } from "@/firebase/errors";
+import { Skeleton } from "@/components/ui/skeleton";
 
-const candidates = [
-  { id: "1", name: "Candidate A", imageId: "candidate-a" },
-  { id: "2", name: "Candidate B", imageId: "candidate-b" },
-  { id: "3", name: "Candidate C", imageId: "candidate-c" },
-];
+interface Candidate {
+  id: string;
+  name: string;
+  imageUrl: string;
+}
 
 export default function VotePage() {
   const [selectedCandidate, setSelectedCandidate] = useState<string | null>(null);
@@ -41,25 +45,75 @@ export default function VotePage() {
   const router = useRouter();
   const { toast } = useToast();
   const { dict } = useDictionary();
+  const db = useFirestore();
+
+  const { data: candidates, isLoading: candidatesLoading } = useCollection<Candidate>("candidates");
+
+  const [nationalId, setNationalId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const id = sessionStorage.getItem('nationalId');
+    if (!id) {
+      toast({
+        variant: 'destructive',
+        title: "Authentication Error",
+        description: "National ID not found. Please log in again.",
+      });
+      router.push('/');
+    } else {
+      setNationalId(id);
+    }
+  }, [router, toast]);
+
 
   const handleVoteSubmit = () => {
+    if (!selectedCandidate || !nationalId) {
+        toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Please select a candidate and make sure you are logged in.",
+        });
+        return;
+    }
+    
     setIsLoading(true);
-    // Simulate API call to submit vote and get a receipt
-    setTimeout(() => {
-      // In a real app, this hash would come from a cryptographic process
-      const receipt = `receipt-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
-      
-      toast({
-        title: dict.vote.successToastTitle,
-        description: dict.vote.successToastDescription,
-      });
+    
+    const voteData = {
+        candidateId: selectedCandidate,
+        candidateName: getCandidateName(selectedCandidate),
+        votedAt: serverTimestamp(),
+    };
 
-      router.push(`/confirmation?receipt=${receipt}`);
-    }, 2000);
+    const voteRef = doc(db, 'votes', nationalId);
+
+    setDoc(voteRef, voteData)
+      .then(() => {
+        const receipt = `receipt-${nationalId}-${Date.now()}`;
+        toast({
+          title: dict.vote.successToastTitle,
+          description: dict.vote.successToastDescription,
+        });
+        router.push(`/confirmation?receipt=${receipt}`);
+      })
+      .catch((serverError) => {
+        setIsLoading(false);
+        setIsDialogOpen(false);
+        const permissionError = new FirestorePermissionError({
+          path: voteRef.path,
+          operation: 'create',
+          requestResourceData: voteData,
+        });
+        errorEmitter.emit('permission-error', permissionError);
+        toast({
+            variant: "destructive",
+            title: "Vote Failed",
+            description: "Could not submit your vote. You may have already voted or there was a server error.",
+        });
+      });
   };
   
   const getCandidateName = (id: string | null) => {
-    return candidates.find(c => c.id === id)?.name || "";
+    return candidates?.find(c => c.id === id)?.name || "";
   }
   
   return (
@@ -74,14 +128,23 @@ export default function VotePage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {candidatesLoading ? (
+            <div className="space-y-4">
+                {[...Array(3)].map((_, i) => (
+                    <div key={i} className="flex items-center gap-4 rounded-lg border-2 p-4">
+                        <Skeleton className="h-6 w-6 rounded-full" />
+                        <Skeleton className="h-16 w-16 rounded-full" />
+                        <Skeleton className="h-6 w-40" />
+                    </div>
+                ))}
+            </div>
+          ) : (
           <RadioGroup
             value={selectedCandidate ?? undefined}
             onValueChange={setSelectedCandidate}
             className="space-y-4"
           >
-            {candidates.map((candidate) => {
-              const candidateImage = placeholderImages.find(p => p.id === candidate.imageId);
-              return (
+            {candidates?.map((candidate) => (
               <Label
                 key={candidate.id}
                 htmlFor={`candidate-${candidate.id}`}
@@ -92,26 +155,25 @@ export default function VotePage() {
                 }`}
               >
                 <RadioGroupItem value={candidate.id} id={`candidate-${candidate.id}`} />
-                 {candidateImage && (
-                    <div className="relative h-16 w-16 rounded-full overflow-hidden">
-                        <Image
-                            src={candidateImage.imageUrl}
-                            alt={candidateImage.description}
-                            data-ai-hint={candidateImage.imageHint}
-                            fill
-                            className="object-cover"
-                        />
-                    </div>
-                )}
+                <div className="relative h-16 w-16 rounded-full overflow-hidden">
+                    <Image
+                        src={candidate.imageUrl}
+                        alt={`Portrait of ${candidate.name}`}
+                        fill
+                        className="object-cover"
+                        sizes="64px"
+                    />
+                </div>
                 <span className="text-xl font-semibold">{candidate.name}</span>
               </Label>
-            )})}
+            ))}
           </RadioGroup>
+          )}
 
           <div className="mt-8 text-center">
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
-                <Button size="lg" disabled={!selectedCandidate} className="bg-accent text-accent-foreground hover:bg-accent/90">
+                <Button size="lg" disabled={!selectedCandidate || candidatesLoading} className="bg-accent text-accent-foreground hover:bg-accent/90">
                   <VoteIcon className="mr-2 h-5 w-5" />
                   {dict.vote.previewButton}
                 </Button>

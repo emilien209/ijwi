@@ -3,6 +3,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { MainLayout } from '@/components/main-layout';
 import './globals.css';
 import { LanguageProvider } from '@/contexts/language-context';
+import { FirebaseClientProvider } from '@/firebase/client-provider';
 
 export const metadata: Metadata = {
   title: "Ijwi ry'Umuturage",
@@ -22,9 +23,11 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=PT+Sans:wght@400;700&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased">
-        <LanguageProvider>
-          <MainLayout>{children}</MainLayout>
-        </LanguageProvider>
+        <FirebaseClientProvider>
+            <LanguageProvider>
+              <MainLayout>{children}</MainLayout>
+            </LanguageProvider>
+        </FirebaseClientProvider>
         <Toaster />
       </body>
     </html>

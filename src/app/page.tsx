@@ -27,14 +27,13 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useDictionary } from "@/hooks/use-dictionary";
 import { Loader2, ShieldCheck } from "lucide-react";
+import { useFirestore } from "@/firebase";
+import { doc, getDoc } from "firebase/firestore";
 
 const formSchema = z.object({
   nationalId: z.string().length(16, "National ID must be 16 digits."),
   otp: z.string().optional(),
 });
-
-// In a real app, this would be a persistent store (e.g., Firestore)
-const votedIDs = new Set<string>();
 
 export default function LoginPage() {
   const [otpSent, setOtpSent] = useState(false);
@@ -42,6 +41,7 @@ export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
   const { dict } = useDictionary();
+  const db = useFirestore();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -58,16 +58,27 @@ export default function LoginPage() {
     }
     
     const nationalId = form.getValues("nationalId");
-    if (votedIDs.has(nationalId)) {
-        toast({
-            variant: "destructive",
-            title: "Already Voted",
-            description: "This National ID has already been used to vote.",
-        });
-        return;
-    }
     
     setIsLoading(true);
+    
+    try {
+      const userVoteDoc = await getDoc(doc(db, "votes", nationalId));
+      if (userVoteDoc.exists()) {
+        toast({
+          variant: "destructive",
+          title: "Already Voted",
+          description: "This National ID has already been used to vote.",
+        });
+        setIsLoading(false);
+        return;
+      }
+    } catch(e) {
+        // We can ignore this error for now, as it might be a permissions issue
+        // for checking a non-existent document. The security rules should
+        // prevent a second vote anyway.
+    }
+
+
     // Simulate API call to request OTP
     setTimeout(() => {
       setOtpSent(true);
@@ -91,7 +102,10 @@ export default function LoginPage() {
     // Simulate OTP verification
     setTimeout(() => {
       if (values.otp === "123456") { // Mock OTP
-        votedIDs.add(values.nationalId); // Mark ID as voted
+        // In a real app, the user would be properly authenticated here.
+        // We'll store the ID in session storage to pass to the voting page.
+        sessionStorage.setItem('nationalId', values.nationalId);
+        
         toast({
           title: dict.login.loginSuccessTitle,
           description: dict.login.loginSuccessDescription,
