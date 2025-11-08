@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
   CardFooter,
@@ -27,19 +26,24 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useDictionary } from "@/hooks/use-dictionary";
 import { placeholderImages } from "@/lib/placeholder-images";
-import { PlusCircle, Trash2, User } from "lucide-react";
+import { PlusCircle, Trash2, User, Upload } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const formSchema = z.object({
   name: z.string().min(2, "Name is required."),
-  imageUrl: z.string().url("Must be a valid URL."),
+  imageUrl: z.string().optional(),
+  uploadedImage: z.any().optional(),
+}).refine(data => data.imageUrl || data.uploadedImage, {
+    message: "Either a photo URL or an uploaded image is required.",
+    path: ["imageUrl"],
 });
 
-type Candidate = z.infer<typeof formSchema> & { id: string, imageId: string };
+type Candidate = { id: string, name: string, imageUrl: string };
 
 const initialCandidates: Candidate[] = [
-  { id: "1", name: "Candidate A", imageUrl: placeholderImages.find(p => p.id === "candidate-a")?.imageUrl || '', imageId: "candidate-a" },
-  { id: "2", name: "Candidate B", imageUrl: placeholderImages.find(p => p.id === "candidate-b")?.imageUrl || '', imageId: "candidate-b" },
-  { id: "3", name: "Candidate C", imageUrl: placeholderImages.find(p => p.id === "candidate-c")?.imageUrl || '', imageId: "candidate-c" },
+  { id: "1", name: "Candidate A", imageUrl: placeholderImages.find(p => p.id === "candidate-a")?.imageUrl || '' },
+  { id: "2", name: "Candidate B", imageUrl: placeholderImages.find(p => p.id === "candidate-b")?.imageUrl || '' },
+  { id: "3", name: "Candidate C", imageUrl: placeholderImages.find(p => p.id === "candidate-c")?.imageUrl || '' },
 ];
 
 
@@ -47,6 +51,8 @@ export default function CandidatesPage() {
   const { dict } = useDictionary();
   const { toast } = useToast();
   const [candidates, setCandidates] = useState<Candidate[]>(initialCandidates);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -56,11 +62,35 @@ export default function CandidatesPage() {
     },
   });
 
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      form.setValue("uploadedImage", file);
+      form.setValue("imageUrl", ""); // Clear URL field
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   function onSubmit(values: z.infer<typeof formSchema>) {
+    const imageUrl = values.imageUrl || previewImage;
+
+    if (!imageUrl) {
+        toast({
+            variant: "destructive",
+            title: "Image Required",
+            description: "Please provide an image URL or upload a file.",
+        });
+        return;
+    }
+
     const newCandidate: Candidate = {
-        ...values,
+        name: values.name,
+        imageUrl: imageUrl,
         id: `candidate-${Date.now()}`,
-        imageId: `custom-${Date.now()}`
     }
     setCandidates(prev => [...prev, newCandidate]);
     toast({
@@ -68,6 +98,10 @@ export default function CandidatesPage() {
       description: `${values.name} has been added to the list.`,
     });
     form.reset();
+    setPreviewImage(null);
+    if(fileInputRef.current) {
+        fileInputRef.current.value = "";
+    }
   }
 
   return (
@@ -134,19 +168,68 @@ export default function CandidatesPage() {
                                 </FormItem>
                             )}
                         />
-                        <FormField
-                            control={form.control}
-                            name="imageUrl"
-                            render={({ field }) => (
-                                <FormItem>
-                                <FormLabel>{dict.admin.candidatePhoto}</FormLabel>
-                                <FormControl>
-                                    <Input placeholder={dict.admin.candidatePhotoPlaceholder} {...field} />
-                                </FormControl>
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                        />
+
+                        <Tabs defaultValue="url" className="w-full">
+                            <TabsList className="grid w-full grid-cols-2">
+                                <TabsTrigger value="url">From URL</TabsTrigger>
+                                <TabsTrigger value="upload">Upload</TabsTrigger>
+                            </TabsList>
+                            <TabsContent value="url" className="pt-4">
+                                <FormField
+                                    control={form.control}
+                                    name="imageUrl"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                        <FormLabel>{dict.admin.candidatePhoto}</FormLabel>
+                                        <FormControl>
+                                            <Input 
+                                                placeholder={dict.admin.candidatePhotoPlaceholder} 
+                                                {...field}
+                                                onChange={(e) => {
+                                                    field.onChange(e);
+                                                    setPreviewImage(null);
+                                                    form.setValue("uploadedImage", null);
+                                                }}
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            </TabsContent>
+                             <TabsContent value="upload" className="pt-4">
+                                <FormField
+                                    control={form.control}
+                                    name="uploadedImage"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Upload Image</FormLabel>
+                                            <FormControl>
+                                                 <div className="flex items-center justify-center w-full">
+                                                    <label htmlFor="dropzone-file" className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-muted hover:bg-muted/80">
+                                                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                                                            <Upload className="w-8 h-8 mb-2 text-muted-foreground"/>
+                                                            <p className="mb-2 text-sm text-center text-muted-foreground"><span className="font-semibold">Click to upload</span> or drag and drop</p>
+                                                            <p className="text-xs text-muted-foreground">PNG, JPG or GIF</p>
+                                                        </div>
+                                                        <Input id="dropzone-file" type="file" className="hidden" onChange={handleFileChange} accept="image/png, image/jpeg, image/gif" ref={fileInputRef}/>
+                                                    </label>
+                                                </div> 
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            </TabsContent>
+                        </Tabs>
+                        
+                        {previewImage && (
+                            <div className="relative w-full h-40 rounded-md overflow-hidden border">
+                                <Image src={previewImage} alt="Preview" layout="fill" objectFit="cover" />
+                            </div>
+                        )}
+                        
+
                         <Button type="submit" className="w-full">
                             <PlusCircle className="mr-2"/>
                             {dict.admin.addCandidate}
