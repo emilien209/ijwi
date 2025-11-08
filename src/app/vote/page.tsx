@@ -81,20 +81,22 @@ export default function VotePage() {
   useEffect(() => {
     const id = sessionStorage.getItem('nationalId');
     if (!id) {
-      toast({
-        variant: 'destructive',
-        title: "Authentication Error",
-        description: "National ID not found. Please log in again.",
-      });
-      router.push('/');
+        if (authChecked) {
+             toast({
+                variant: 'destructive',
+                title: "Authentication Error",
+                description: "National ID not found. Please log in again.",
+            });
+            router.push('/');
+        }
     } else {
       setNationalId(id);
     }
     setAuthChecked(true);
-  }, [router, toast]);
+  }, [router, toast, authChecked]);
 
   useEffect(() => {
-    if (!nationalId || !db || !groups || !authChecked) return;
+    if (!nationalId || !db || !groups) return;
 
     const fetchVotedGroups = async () => {
         const voted: string[] = [];
@@ -109,7 +111,7 @@ export default function VotePage() {
     };
 
     fetchVotedGroups();
-  }, [nationalId, db, groups, authChecked]);
+  }, [nationalId, db, groups]);
 
 
   const handleVoteSubmit = () => {
@@ -145,7 +147,12 @@ export default function VotePage() {
       })
       .catch((serverError) => {
         setIsLoading(false);
-        setIsDialogOpen(false);
+        // Do not close the dialog on error
+        toast({
+          variant: "destructive",
+          title: "Submission Failed",
+          description: "Your vote could not be submitted. Please try again.",
+        });
         const permissionError = new FirestorePermissionError({
           path: voteRef.path,
           operation: 'create',
@@ -168,6 +175,14 @@ export default function VotePage() {
   }
   
   const isLoadingAnything = candidatesLoading || groupsLoading || settingsLoading || !authChecked;
+
+  if (!authChecked) {
+      return (
+          <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center p-4">
+              <Loader2 className="animate-spin h-8 w-8" />
+          </div>
+      )
+  }
 
   if (electionStatus === 'ended' && !settingsLoading) {
     return (
