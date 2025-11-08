@@ -18,7 +18,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { useCollection } from "@/firebase";
+import { useCollection, useDoc } from "@/firebase";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#AF19FF", "#FF8C00"];
@@ -33,16 +33,23 @@ interface Candidate {
     name: string;
 }
 
+interface ElectionSettings {
+    status: 'active' | 'ended';
+}
+
 export default function ElectionResultsPage() {
   const { dict } = useDictionary();
   const { data: votes, isLoading: votesLoading } = useCollection<Vote>('votes');
   const { data: candidates, isLoading: candidatesLoading } = useCollection<Candidate>('candidates');
+  const { data: electionSettings, isLoading: settingsLoading } = useDoc<ElectionSettings>('settings/election');
+  
+  const electionStatus = electionSettings?.status || "active";
 
   const electionData = useMemo(() => {
     if (!votes || !candidates) return [];
 
     const voteCounts = new Map<string, number>();
-    candidates.forEach(c => voteCounts.set(c.name, 0)); // Initialize all candidates with 0 votes
+    candidates.forEach(c => voteCounts.set(c.name, 0)); 
 
     votes.forEach(vote => {
         if(vote.candidateName) {
@@ -55,7 +62,6 @@ export default function ElectionResultsPage() {
         votes: count,
     }));
     
-    // Only return candidates who have votes or if there are no votes at all.
     if(votes.length > 0) {
         return data.filter(d => d.votes > 0);
     }
@@ -63,7 +69,42 @@ export default function ElectionResultsPage() {
 
   }, [votes, candidates]);
 
-  const isLoading = votesLoading || candidatesLoading;
+  const isLoading = votesLoading || candidatesLoading || settingsLoading;
+
+  if (isLoading) {
+      return (
+        <div className="container mx-auto py-8 px-4">
+             <Card className="w-full max-w-4xl mx-auto shadow-2xl">
+                <CardHeader>
+                    <Skeleton className="h-8 w-3/4 mb-2" />
+                    <Skeleton className="h-6 w-1/2" />
+                </CardHeader>
+                <CardContent className="h-[500px] flex items-center justify-center">
+                    <Skeleton className="w-full h-[450px]" />
+                </CardContent>
+            </Card>
+        </div>
+      )
+  }
+
+  if (electionStatus === 'active') {
+      return (
+        <div className="container mx-auto py-8 px-4">
+             <Card className="w-full max-w-4xl mx-auto shadow-2xl text-center">
+                <CardHeader>
+                    <CardTitle className="text-3xl font-bold font-headline text-primary">
+                        Results are not yet available.
+                    </CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <CardDescription className="text-lg">
+                        The election is still active. Final results will be published here once the election has concluded.
+                    </CardDescription>
+                </CardContent>
+             </Card>
+        </div>
+      )
+  }
 
   return (
     <div className="container mx-auto py-8 px-4">
@@ -75,11 +116,7 @@ export default function ElectionResultsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="h-[500px]">
-          { isLoading ? (
-            <div className="flex items-center justify-center h-full">
-              <Skeleton className="w-full h-[450px]" />
-            </div>
-            ) : electionData && electionData.length > 0 ? (
+          {electionData && electionData.length > 0 ? (
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
@@ -87,7 +124,7 @@ export default function ElectionResultsPage() {
                 cx="50%"
                 cy="50%"
                 labelLine={false}
-                label={({ cx, cy, midAngle, innerRadius, outerRadius, percent, index }) => {
+                label={({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
                   const RADIAN = Math.PI / 180;
                   const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
                   const x = cx + radius * Math.cos(-midAngle * RADIAN);
@@ -127,3 +164,4 @@ export default function ElectionResultsPage() {
     </div>
   );
 }
+

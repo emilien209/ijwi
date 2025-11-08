@@ -21,9 +21,23 @@ import {
 } from "recharts";
 import { Button } from "@/components/ui/button";
 import Link from 'next/link';
-import { useCollection } from "@/firebase";
-import { useMemo } from "react";
+import { useFirestore, useCollection, useDoc } from "@/firebase";
+import { useMemo, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { collection, doc, writeBatch, getDocs, setDoc } from "firebase/firestore";
+import { Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 interface Vote {
     candidateId: string;
@@ -35,12 +49,21 @@ interface Candidate {
     name: string;
 }
 
+interface ElectionSettings {
+    status: 'active' | 'ended';
+}
+
 export default function AdminDashboardPage() {
   const { dict } = useDictionary();
+  const db = useFirestore();
+  const { toast } = useToast();
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+
   const { data: votes, isLoading: votesLoading } = useCollection<Vote>('votes');
   const { data: candidates, isLoading: candidatesLoading } = useCollection<Candidate>('candidates');
+  const { data: electionSettings, isLoading: settingsLoading } = useDoc<ElectionSettings>('settings/election');
   
-  const electionStatus = "active"; // "active" or "ended"
+  const electionStatus = electionSettings?.status || "active";
 
   const electionData = useMemo(() => {
     if (!votes || !candidates) return [];
@@ -58,7 +81,53 @@ export default function AdminDashboardPage() {
 
   const totalVotes = useMemo(() => electionData.reduce((acc, curr) => acc + curr.votes, 0), [electionData]);
   
-  const isLoading = votesLoading || candidatesLoading;
+  const isLoading = votesLoading || candidatesLoading || settingsLoading;
+
+  const handleEndElection = async () => {
+    if (!db) return;
+    setIsUpdatingStatus(true);
+    const settingsRef = doc(db, 'settings', 'election');
+    try {
+        await setDoc(settingsRef, { status: 'ended' });
+        toast({ title: "Election Ended", description: "The election has been successfully closed." });
+    } catch (error) {
+        console.error("Error ending election:", error);
+        toast({ variant: 'destructive', title: "Error", description: "Could not end the election." });
+    } finally {
+        setIsUpdatingStatus(false);
+    }
+  }
+
+  const handleResetElection = async () => {
+    if(!db) return;
+    setIsUpdatingStatus(true);
+    
+    try {
+        const batch = writeBatch(db);
+
+        // Delete all votes
+        const votesQuerySnapshot = await getDocs(collection(db, 'votes'));
+        votesQuerySnapshot.forEach(doc => batch.delete(doc.ref));
+
+        // Delete all candidates
+        const candidatesQuerySnapshot = await getDocs(collection(db, 'candidates'));
+        candidatesQuerySnapshot.forEach(doc => batch.delete(doc.ref));
+
+        // Reset election status
+        const settingsRef = doc(db, 'settings', 'election');
+        batch.set(settingsRef, { status: 'active' });
+
+        await batch.commit();
+
+        toast({ title: "Election Reset", description: "All votes and candidates have been cleared. A new election can begin." });
+
+    } catch (error) {
+        console.error("Error resetting election:", error);
+        toast({ variant: 'destructive', title: "Error", description: "Could not reset the election." });
+    } finally {
+        setIsUpdatingStatus(false);
+    }
+  }
 
   return (
     <div className="space-y-8">
@@ -91,12 +160,39 @@ export default function AdminDashboardPage() {
             </Card>
              <Card>
               <CardHeader>
-                <CardTitle>{dict.admin.manageCandidates}</CardTitle>
+                <CardTitle>Election Controls</CardTitle>
               </CardHeader>
               <CardContent>
-                <Link href="/admin/candidates">
-                    <Button>{dict.admin.goToCandidates}</Button>
-                </Link>
+                {isLoading ? <Skeleton className="h-10 w-full" /> : (
+                    electionStatus === 'active' ? (
+                        <Button onClick={handleEndElection} disabled={isUpdatingStatus} variant="destructive">
+                           {isUpdatingStatus && <Loader2 className="animate-spin" />} 
+                           End Election
+                        </Button>
+                    ) : (
+                         <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                 <Button disabled={isUpdatingStatus} variant="secondary">
+                                    {isUpdatingStatus && <Loader2 className="animate-spin" />} 
+                                    Reset Election
+                                </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    This action cannot be undone. This will permanently delete all
+                                    current votes and candidates, and start a new election.
+                                </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={handleResetElection}>Continue</AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                    )
+                )}
               </CardContent>
             </Card>
           </div>

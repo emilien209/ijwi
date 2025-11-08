@@ -25,8 +25,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useDictionary } from "@/hooks/use-dictionary";
-import { Loader2, Vote as VoteIcon, ChevronDown, Check } from "lucide-react";
-import { useFirestore, useCollection } from "@/firebase";
+import { Loader2, Vote as VoteIcon, ChevronDown, Check, Ban } from "lucide-react";
+import { useFirestore, useCollection, useDoc } from "@/firebase";
 import { doc, setDoc, serverTimestamp, getDoc } from "firebase/firestore";
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError } from "@/firebase/errors";
@@ -52,6 +52,10 @@ interface ElectionGroup {
     description?: string;
 }
 
+interface ElectionSettings {
+    status: 'active' | 'ended';
+}
+
 export default function VotePage() {
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -66,6 +70,9 @@ export default function VotePage() {
 
   const { data: candidates, isLoading: candidatesLoading } = useCollection<Candidate>("candidates");
   const { data: groups, isLoading: groupsLoading } = useCollection<ElectionGroup>("groups");
+  const { data: electionSettings, isLoading: settingsLoading } = useDoc<ElectionSettings>('settings/election');
+  
+  const electionStatus = electionSettings?.status || "active";
 
   const [nationalId, setNationalId] = useState<string | null>(null);
 
@@ -157,7 +164,32 @@ export default function VotePage() {
     setSelectedCandidate(candidate);
   }
   
-  const isLoadingAnything = candidatesLoading || groupsLoading;
+  const isLoadingAnything = candidatesLoading || groupsLoading || settingsLoading;
+
+  if (electionStatus === 'ended') {
+    return (
+        <div className="container mx-auto py-8 px-4">
+            <Card className="w-full max-w-4xl mx-auto shadow-2xl text-center">
+                <CardHeader>
+                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10 mb-4">
+                        <Ban className="h-8 w-8 text-destructive" />
+                    </div>
+                    <CardTitle className="text-3xl font-bold font-headline text-destructive">
+                        The Election Has Ended
+                    </CardTitle>
+                    <CardDescription className="text-lg">
+                        The voting period is now closed. Thank you for your participation.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Link href="/results">
+                        <Button>View Final Results</Button>
+                    </Link>
+                </CardContent>
+            </Card>
+        </div>
+    )
+  }
 
   return (
     <div className="container mx-auto py-8 px-4">
