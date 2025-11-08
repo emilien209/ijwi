@@ -7,6 +7,8 @@ export const en = {
   navCandidates: "Candidates",
   navResults: "Results",
   navFraud: "Fraud Detection",
+  navGroups: "Groups",
+  navHistory: "History",
 
   login: {
     title: "Identity Verification",
@@ -123,3 +125,5 @@ export const en = {
     analysisErrorDescription: "An error occurred while analyzing the data.",
   }
 };
+
+    

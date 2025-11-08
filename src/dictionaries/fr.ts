@@ -9,6 +9,8 @@ export const fr: Dictionary = {
   navCandidates: "Candidats",
   navResults: "Résultats",
   navFraud: "Détection de Fraude",
+  navGroups: "Groupes",
+  navHistory: "Historique",
 
   login: {
     title: "Vérification d'Identité",
@@ -125,3 +127,5 @@ export const fr: Dictionary = {
     analysisErrorDescription: "Une erreur est survenue lors de l'analyse des données.",
   }
 };
+
+    

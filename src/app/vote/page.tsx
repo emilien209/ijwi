@@ -25,7 +25,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useDictionary } from "@/hooks/use-dictionary";
-import { Loader2, Vote as VoteIcon, ChevronDown, Check, Ban } from "lucide-react";
+import { Loader2, Vote as VoteIcon, ChevronDown, Check, Ban, AlertCircle } from "lucide-react";
 import { useFirestore, useCollection, useDoc } from "@/firebase";
 import { doc, setDoc, serverTimestamp, getDoc } from "firebase/firestore";
 import { errorEmitter } from "@/firebase/error-emitter";
@@ -37,6 +37,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
 
 
 interface Candidate {
@@ -213,6 +214,21 @@ export default function VotePage() {
                     const groupCandidates = candidates?.filter(c => c.groupId === group.id) || [];
                     const hasVotedInGroup = votedGroups.includes(group.id);
 
+                    if (groupCandidates.length === 0) {
+                      return (
+                         <div key={group.id} className="flex flex-col justify-between items-center w-full p-4 rounded-lg border-2 bg-muted/30">
+                            <div className="text-left w-full mb-4">
+                                <h3 className="text-lg font-semibold">{group.name}</h3>
+                                <p className="text-sm text-muted-foreground">{group.description}</p>
+                            </div>
+                            <div className="flex items-center gap-2 text-muted-foreground text-sm p-4 border-2 border-dashed rounded-lg w-full justify-center">
+                              <AlertCircle className="h-5 w-5" />
+                              <span>No candidates have been added to this group yet.</span>
+                            </div>
+                        </div>
+                      )
+                    }
+
                     return (
                         <Collapsible key={group.id} open={openGroup === group.id} onOpenChange={() => setOpenGroup(openGroup === group.id ? null : group.id)}>
                             <CollapsibleTrigger asChild>
@@ -313,3 +329,5 @@ export default function VotePage() {
     </div>
   );
 }
+
+    

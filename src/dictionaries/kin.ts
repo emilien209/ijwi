@@ -9,6 +9,8 @@ export const kin: Dictionary = {
   navCandidates: "Abakandida",
   navResults: "Ibyavuye mu Matora",
   navFraud: "Gukumira Uburiganya",
+  navGroups: "Amatsinda",
+  navHistory: "Amateka",
 
   login: {
     title: "Kwemeza Umwirondoro",
@@ -125,3 +127,5 @@ export const kin: Dictionary = {
     analysisErrorDescription: "Habaye ikosa mu gusesengura amakuru.",
   }
 };
+
+    

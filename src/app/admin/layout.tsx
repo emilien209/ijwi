@@ -10,6 +10,8 @@ import {
   Users,
   LogOut,
   Vote,
+  Group,
+  History,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -31,9 +33,11 @@ import { Button } from '@/components/ui/button';
 
 const adminNavLinks = [
     { href: "/admin", labelKey: "navDashboard", icon: LayoutDashboard },
+    { href: "/admin/groups", labelKey: "navGroups", icon: Group },
     { href: "/admin/candidates", labelKey: "navCandidates", icon: Users },
     { href: "/admin/results", labelKey: "navResults", icon: BarChart2 },
     { href: "/admin/fraud-detection", labelKey: "navFraud", icon: Shield },
+    { href: "/admin/history", labelKey: "navHistory", icon: History },
 ];
 
 
@@ -123,3 +127,5 @@ export default function AdminLayout({
     </SidebarProvider>
   );
 }
+
+    
