@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { LanguageSwitcher } from "./language-switcher";
 import { useDictionary } from "@/hooks/use-dictionary";
 import { Vote } from "lucide-react";
 import { usePathname } from "next/navigation";
@@ -42,7 +41,7 @@ export function Header() {
             ))}
         </nav>
         <div className="flex flex-1 items-center justify-end space-x-4">
-          <LanguageSwitcher />
+          {/* <LanguageSwitcher /> */}
         </div>
       </div>
     </header>
