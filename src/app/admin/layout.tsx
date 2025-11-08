@@ -2,12 +2,13 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   BarChart2,
   LayoutDashboard,
   Shield,
   Users,
+  LogOut,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -20,9 +21,12 @@ import {
   SidebarMenuButton,
   SidebarInset,
   SidebarTrigger,
+  SidebarFooter,
 } from '@/components/ui/sidebar';
 import { useDictionary } from '@/hooks/use-dictionary';
-
+import { useEffect, useState } from 'react';
+import { ADMIN_AUTH_TOKEN } from './auth/page';
+import { Button } from '@/components/ui/button';
 
 const adminNavLinks = [
     { href: "/admin", labelKey: "navDashboard", icon: LayoutDashboard },
@@ -38,7 +42,48 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const { dict } = useDictionary();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+    if (typeof window !== 'undefined') {
+        const hasToken = !!sessionStorage.getItem(ADMIN_AUTH_TOKEN);
+        setIsAuthenticated(hasToken);
+        if (!hasToken && pathname !== '/admin/auth') {
+            router.replace('/admin/auth');
+        }
+    }
+  }, [pathname, router]);
+  
+  const handleLogout = () => {
+    sessionStorage.removeItem(ADMIN_AUTH_TOKEN);
+    setIsAuthenticated(false);
+    router.replace('/admin/auth');
+  }
+
+  if (!isMounted) {
+      return (
+          <div className="flex min-h-screen items-center justify-center">
+              <p>Loading...</p>
+          </div>
+      )
+  }
+
+  if (pathname === '/admin/auth') {
+      return <>{children}</>;
+  }
+
+  if (!isAuthenticated) {
+    // This will be shown briefly before redirection
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+          <p>Redirecting to login...</p>
+      </div>
+    );
+  }
 
   return (
     <SidebarProvider>
@@ -63,6 +108,12 @@ export default function AdminLayout({
                     ))}
                 </SidebarMenu>
             </SidebarContent>
+            <SidebarFooter>
+                <Button variant="ghost" onClick={handleLogout} className="justify-start">
+                    <LogOut />
+                    <span>Logout</span>
+                </Button>
+            </SidebarFooter>
         </Sidebar>
         <SidebarInset>
              <div className="p-4 md:p-8">
