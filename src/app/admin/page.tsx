@@ -89,10 +89,10 @@ export default function AdminDashboardPage() {
     const settingsRef = doc(db, 'settings', 'election');
     try {
         await setDoc(settingsRef, { status: 'ended' });
-        toast({ title: "Election Ended", description: "The election has been successfully closed." });
+        toast({ title: dict.appName, description: dict.admin.dashboard.endElectionSuccess });
     } catch (error) {
         console.error("Error ending election:", error);
-        toast({ variant: 'destructive', title: "Error", description: "Could not end the election." });
+        toast({ variant: 'destructive', title: dict.admin.auth.errorTitle, description: dict.admin.dashboard.endElectionError });
     } finally {
         setIsUpdatingStatus(false);
     }
@@ -112,6 +112,10 @@ export default function AdminDashboardPage() {
         // Delete all candidates
         const candidatesQuerySnapshot = await getDocs(collection(db, 'candidates'));
         candidatesQuerySnapshot.forEach(doc => batch.delete(doc.ref));
+        
+        // Delete all groups
+        const groupsQuerySnapshot = await getDocs(collection(db, 'groups'));
+        groupsQuerySnapshot.forEach(doc => batch.delete(doc.ref));
 
         // Reset election status
         const settingsRef = doc(db, 'settings', 'election');
@@ -119,11 +123,11 @@ export default function AdminDashboardPage() {
 
         await batch.commit();
 
-        toast({ title: "Election Reset", description: "All votes and candidates have been cleared. A new election can begin." });
+        toast({ title: dict.appName, description: dict.admin.dashboard.resetElectionSuccess });
 
     } catch (error) {
         console.error("Error resetting election:", error);
-        toast({ variant: 'destructive', title: "Error", description: "Could not reset the election." });
+        toast({ variant: 'destructive', title: dict.admin.auth.errorTitle, description: dict.admin.dashboard.resetElectionError });
     } finally {
         setIsUpdatingStatus(false);
     }
@@ -133,14 +137,14 @@ export default function AdminDashboardPage() {
     <div className="space-y-8">
       <Card>
         <CardHeader>
-          <CardTitle>{dict.admin.dashboardTitle}</CardTitle>
-          <CardDescription>{dict.admin.dashboardDescription}</CardDescription>
+          <CardTitle>{dict.admin.dashboard.title}</CardTitle>
+          <CardDescription>{dict.admin.dashboard.description}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid md:grid-cols-3 gap-6">
             <Card>
               <CardHeader>
-                <CardTitle>{dict.admin.totalVotes}</CardTitle>
+                <CardTitle>{dict.admin.dashboard.totalVotes}</CardTitle>
               </CardHeader>
               <CardContent>
                  {isLoading ? <Skeleton className="h-10 w-1/2" /> : <p className="text-4xl font-bold">{totalVotes.toLocaleString()}</p>}
@@ -148,46 +152,45 @@ export default function AdminDashboardPage() {
             </Card>
             <Card>
               <CardHeader>
-                <CardTitle>{dict.admin.electionStatus}</CardTitle>
+                <CardTitle>{dict.admin.dashboard.electionStatus}</CardTitle>
               </CardHeader>
               <CardContent>
                  {isLoading ? <Skeleton className="h-10 w-1/2" /> :
                     <p className={`text-4xl font-bold ${electionStatus === 'active' ? 'text-green-600' : 'text-destructive'}`}>
-                        {electionStatus === 'active' ? dict.admin.statusActive : dict.admin.statusEnded}
+                        {electionStatus === 'active' ? dict.admin.dashboard.statusActive : dict.admin.dashboard.statusEnded}
                     </p>
                  }
               </CardContent>
             </Card>
              <Card>
               <CardHeader>
-                <CardTitle>Election Controls</CardTitle>
+                <CardTitle>{dict.admin.dashboard.controlsTitle}</CardTitle>
               </CardHeader>
               <CardContent>
                 {isLoading ? <Skeleton className="h-10 w-full" /> : (
                     electionStatus === 'active' ? (
                         <Button onClick={handleEndElection} disabled={isUpdatingStatus} variant="destructive">
                            {isUpdatingStatus && <Loader2 className="animate-spin" />} 
-                           End Election
+                           {isUpdatingStatus ? dict.admin.dashboard.endingButton : dict.admin.dashboard.endElectionButton}
                         </Button>
                     ) : (
                          <AlertDialog>
                             <AlertDialogTrigger asChild>
                                  <Button disabled={isUpdatingStatus} variant="secondary">
                                     {isUpdatingStatus && <Loader2 className="animate-spin" />} 
-                                    Reset Election
+                                    {isUpdatingStatus ? dict.admin.dashboard.resettingButton : dict.admin.dashboard.resetElectionButton}
                                 </Button>
                             </AlertDialogTrigger>
                             <AlertDialogContent>
                                 <AlertDialogHeader>
-                                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                <AlertDialogTitle>{dict.admin.dashboard.resetConfirmTitle}</AlertDialogTitle>
                                 <AlertDialogDescription>
-                                    This action cannot be undone. This will permanently delete all
-                                    current votes and candidates, and start a new election.
+                                    {dict.admin.dashboard.resetConfirmDescription}
                                 </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={handleResetElection}>Continue</AlertDialogAction>
+                                <AlertDialogCancel>{dict.admin.dashboard.cancelButton}</AlertDialogCancel>
+                                <AlertDialogAction onClick={handleResetElection}>{dict.admin.dashboard.continueButton}</AlertDialogAction>
                                 </AlertDialogFooter>
                             </AlertDialogContent>
                         </AlertDialog>
@@ -200,7 +203,7 @@ export default function AdminDashboardPage() {
       </Card>
        <Card>
         <CardHeader>
-          <CardTitle>{dict.admin.resultsTitle}</CardTitle>
+          <CardTitle>{dict.admin.dashboard.resultsTitle}</CardTitle>
         </CardHeader>
         <CardContent className="h-[400px]">
           <ResponsiveContainer width="100%" height="100%">
@@ -223,7 +226,7 @@ export default function AdminDashboardPage() {
                 }}
               />
               <Legend />
-              <Bar dataKey="votes" fill="hsl(var(--primary))" name={dict.admin.votesLabel} />
+              <Bar dataKey="votes" fill="hsl(var(--primary))" name={dict.admin.dashboard.votesLabel} />
             </BarChart>
             }
           </ResponsiveContainer>

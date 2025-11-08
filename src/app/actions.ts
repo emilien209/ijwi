@@ -3,7 +3,7 @@
 
 import { translateText, type MultilingualSupportInput } from "@/ai/flows/multilingual-support";
 import { analyzeVotingPatterns, type AnalyzeVotingPatternsInput } from "@/ai/flows/fraud-detection";
-import { verifyNationalId, type NidaVerificationInput } from "@/ai/flows/nida-verification";
+import { verifyNationalId, type NidaVerificationInput, type NidaVerificationOutput } from "@/ai/flows/nida-verification";
 import { collection, query, where, getDocs, limit } from "firebase/firestore";
 import { firestoreDb } from "@/firebase";
 
@@ -27,37 +27,39 @@ export async function handleFraudAnalysis(input: AnalyzeVotingPatternsInput) {
   }
 }
 
-export async function handleNidaVerification(input: NidaVerificationInput) {
+export async function handleNidaVerification(input: NidaVerificationInput): Promise<{ success: boolean; error?: string; data?: NidaVerificationOutput }> {
   try {
     const result = await verifyNationalId(input);
     if (result.isValid) {
       return { success: true, data: result };
     }
+    
     // Provide a more specific error based on the reason
-    let errorMessage = "Invalid or unregistered National ID.";
+    let errorMessage = "loginErrorDefault"; // Default error key
     if (result.reason === "ID_DOB_MISMATCH") {
-      errorMessage = "Irangamuntu yawe ntiri guhura n'itariki y'amavuko.";
+      errorMessage = "loginErrorMismatch";
     }
+
     return { success: false, error: errorMessage, data: result };
   } catch (error) {
     console.error("NIDA verification error:", error);
-    return { success: false, error: "Could not connect to verification service." };
+    return { success: false, error: "loginErrorService" };
   }
 }
 
 export async function handleVerifyVote(receipt: string): Promise<{ success: boolean; error?: string }> {
   if (!firestoreDb) {
-    return { success: false, error: "Database not available" };
+    return { success: false, error: "verify.dbError" };
   }
   if (!receipt || !receipt.startsWith('receipt-')) {
-    return { success: false, error: "Invalid receipt format." };
+    return { success: false, error: "verify.invalidReceipt" };
   }
 
   // We can't query by the full receipt because it contains a timestamp.
   // Instead, we extract the part that would be the document ID in the votes collection.
   const parts = receipt.split('-');
   if (parts.length < 4) {
-     return { success: false, error: "Invalid receipt format." };
+     return { success: false, error: "verify.invalidReceipt" };
   }
   
   const nationalId = parts[1];
@@ -72,10 +74,10 @@ export async function handleVerifyVote(receipt: string): Promise<{ success: bool
     if (!voteSnap.empty) {
       return { success: true };
     } else {
-      return { success: false, error: "Vote not found." };
+      return { success: false, error: "verify.failDescription" };
     }
   } catch (e) {
     console.error("Error verifying vote:", e);
-    return { success: false, error: "An error occurred during verification." };
+    return { success: false, error: "verify.verificationError" };
   }
 }

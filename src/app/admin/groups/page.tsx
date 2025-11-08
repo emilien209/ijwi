@@ -31,6 +31,7 @@ import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError } from "@/firebase/errors";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
+import { useDictionary } from "@/hooks/use-dictionary";
 
 const formSchema = z.object({
   name: z.string().min(2, "Group name is required."),
@@ -42,6 +43,7 @@ type Group = { id: string; name: string; description?: string };
 export default function GroupsPage() {
   const { toast } = useToast();
   const db = useFirestore();
+  const { dict } = useDictionary();
   const { data: groups, isLoading: groupsLoading } = useCollection<Group>('groups');
   
   const form = useForm<z.infer<typeof formSchema>>({
@@ -63,8 +65,8 @@ export default function GroupsPage() {
     addDoc(groupsCol, newGroup)
         .then(() => {
             toast({
-              title: "Group Added",
-              description: `Group "${values.name}" has been created.`,
+              title: dict.appName,
+              description: dict.admin.groups.addSuccess.replace('{groupName}', values.name),
             });
             form.reset();
         })
@@ -84,8 +86,8 @@ export default function GroupsPage() {
     deleteDoc(docRef)
         .then(() => {
              toast({ 
-              title: "Group Removed", 
-              description: `Group "${group.name}" has been removed.`, 
+              title: dict.appName, 
+              description: dict.admin.groups.removeSuccess.replace('{groupName}', group.name), 
             });
         })
         .catch(serverError => {
@@ -103,7 +105,7 @@ export default function GroupsPage() {
         <div className="lg:col-span-2">
           <Card>
             <CardHeader>
-              <CardTitle>Current Election Groups</CardTitle>
+              <CardTitle>{dict.admin.groups.title}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {groupsLoading ? (
@@ -135,7 +137,7 @@ export default function GroupsPage() {
                               onClick={() => removeGroup(group)}
                             >
                               <Trash2 className="mr-2 h-4 w-4" /> 
-                              Remove
+                              {dict.admin.groups.removeButton}
                             </Button>
                         </CardContent>
                     </Card>
@@ -145,7 +147,7 @@ export default function GroupsPage() {
                 <div className="text-center py-10 border-2 border-dashed rounded-lg">
                   <GroupIcon className="mx-auto h-12 w-12 text-muted-foreground" />
                   <p className="mt-4 text-muted-foreground">
-                    No election groups created yet.
+                    {dict.admin.groups.noGroups}
                   </p>
                 </div>
               )}
@@ -156,8 +158,8 @@ export default function GroupsPage() {
         <div className="lg:col-span-1">
           <Card>
             <CardHeader>
-              <CardTitle>Add Election Group</CardTitle>
-               <CardDescription>Create a new category for candidates, like "Presidential" or "Parliamentary".</CardDescription>
+              <CardTitle>{dict.admin.groups.addTitle}</CardTitle>
+               <CardDescription>{dict.admin.groups.addDescription}</CardDescription>
             </CardHeader>
             <CardContent>
               <Form {...form}>
@@ -167,10 +169,10 @@ export default function GroupsPage() {
                     name="name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Group Name</FormLabel>
+                        <FormLabel>{dict.admin.groups.nameLabel}</FormLabel>
                         <FormControl>
                           <Input 
-                            placeholder="e.g., Presidential Election" 
+                            placeholder={dict.admin.groups.namePlaceholder} 
                             {...field} 
                           />
                         </FormControl>
@@ -183,10 +185,10 @@ export default function GroupsPage() {
                     name="description"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Group Description</FormLabel>
+                        <FormLabel>{dict.admin.groups.descriptionLabel}</FormLabel>
                         <FormControl>
                           <Textarea
-                            placeholder="e.g., Candidates for the 2024 presidential race." 
+                            placeholder={dict.admin.groups.descriptionPlaceholder}
                             {...field} 
                           />
                         </FormControl>
@@ -197,7 +199,7 @@ export default function GroupsPage() {
 
                   <Button type="submit" className="w-full">
                     <PlusCircle className="mr-2 h-4 w-4"/>
-                    Add Group
+                    {dict.admin.groups.addButton}
                   </Button>
                 </form>
               </Form>
@@ -208,5 +210,3 @@ export default function GroupsPage() {
     </div>
   );
 }
-
-    

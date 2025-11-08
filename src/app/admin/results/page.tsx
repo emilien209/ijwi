@@ -18,7 +18,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { useCollection } from "@/firebase";
+import { useCollection, useDoc } from "@/firebase";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#AF19FF", "#FF8C00"];
@@ -34,12 +34,17 @@ interface Candidate {
     name: string;
 }
 
+interface ElectionSettings {
+    status: 'active' | 'ended';
+}
+
 export default function ElectionResultsPage() {
   const { dict } = useDictionary();
   const { data: votes, isLoading: votesLoading } = useCollection<Vote>('votes');
   const { data: candidates, isLoading: candidatesLoading } = useCollection<Candidate>('candidates');
+  const { data: electionSettings, isLoading: settingsLoading } = useDoc<ElectionSettings>('settings/election');
   
-  const electionStatus = "active"; // "active" or "ended"
+  const electionStatus = electionSettings?.status || "active";
 
   const electionData = useMemo(() => {
     if (!votes || !candidates) return [];
@@ -66,7 +71,7 @@ export default function ElectionResultsPage() {
 
   }, [votes, candidates]);
   
-  const isLoading = votesLoading || candidatesLoading;
+  const isLoading = votesLoading || candidatesLoading || settingsLoading;
 
 
   return (
@@ -76,8 +81,8 @@ export default function ElectionResultsPage() {
           <CardTitle>{dict.navResults}</CardTitle>
            <CardDescription>
             {electionStatus === "ended"
-              ? "The election has concluded. Here are the final results."
-              : "The election is ongoing. Results are updated in real-time."}
+              ? dict.results.description
+              : dict.results.ongoingDescription}
           </CardDescription>
         </CardHeader>
         <CardContent className="h-[500px]">
@@ -124,7 +129,7 @@ export default function ElectionResultsPage() {
           </ResponsiveContainer>
             ) : (
                 <div className="flex items-center justify-center h-full">
-                    <p className="text-muted-foreground">No voting data available yet.</p>
+                    <p className="text-muted-foreground">{dict.results.noData}</p>
                 </div>
             )
           }

@@ -57,7 +57,7 @@ const parseFlexibleDate = (dateString: string): Date | null => {
 const formSchema = z.object({
   nationalId: z.string().length(16, "National ID must be 16 digits."),
   dob: z.string().refine((val) => val && parseFlexibleDate(val) !== null, {
-    message: "Invalid date format. Please use YYYY-MM-DD.",
+    message: "Invalid date format. Please enter a valid date.",
   }),
 });
 
@@ -84,8 +84,8 @@ export default function LoginPage() {
         // This should theoretically not be reached due to Zod validation, but as a safeguard:
         toast({
             variant: "destructive",
-            title: "Invalid Date",
-            description: "Please enter a valid date.",
+            title: dict.login.loginErrorTitle,
+            description: dict.login.invalidDate,
         });
         setIsLoading(false);
         return;
@@ -98,14 +98,14 @@ export default function LoginPage() {
       dob: formattedDob,
     });
 
-    if (result.success && result.data) {
-      // Store the ID in session storage to pass to the voting page.
+    if (result.success && result.data?.fullName) {
+      const voterName = result.data.fullName;
       sessionStorage.setItem('nationalId', values.nationalId);
-      sessionStorage.setItem('voterName', result.data.fullName || "Voter");
+      sessionStorage.setItem('voterName', voterName);
       
       toast({
         title: dict.login.loginSuccessTitle,
-        description: `Welcome, ${result.data.fullName}! ${dict.login.loginSuccessDescription}`,
+        description: dict.login.loginSuccessDescription.replace('{voterName}', voterName),
       });
       router.push("/dashboard");
 
@@ -113,7 +113,7 @@ export default function LoginPage() {
       toast({
         variant: "destructive",
         title: dict.login.loginErrorTitle,
-        description: result.error || dict.login.loginErrorDescription,
+        description: result.error || dict.login.loginErrorDefault,
       });
       setIsLoading(false);
     }
@@ -157,10 +157,10 @@ export default function LoginPage() {
                 name="dob"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Date of Birth</FormLabel>
+                    <FormLabel>{dict.login.dobLabel}</FormLabel>
                     <FormControl>
                        <Input
-                        placeholder="YYYY-MM-DD"
+                        placeholder={dict.login.dobPlaceholder}
                         {...field}
                         disabled={isLoading}
                       />

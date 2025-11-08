@@ -31,11 +31,14 @@ const formSchema = z.object({
   receipt: z.string().min(10, "Receipt code is required."),
 });
 
+type VerificationStatus = {
+  status: "success" | "fail" | null;
+  message?: string;
+};
+
 export default function VerifyPage() {
   const [isLoading, setIsLoading] = useState(false);
-  const [verificationStatus, setVerificationStatus] = useState<
-    "success" | "fail" | null
-  >(null);
+  const [verificationStatus, setVerificationStatus] = useState<VerificationStatus>({ status: null });
 
   const { dict } = useDictionary();
 
@@ -48,14 +51,15 @@ export default function VerifyPage() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
-    setVerificationStatus(null);
+    setVerificationStatus({ status: null });
     
     const result = await handleVerifyVote(values.receipt);
     
     if (result.success) {
-      setVerificationStatus("success");
+      setVerificationStatus({ status: "success" });
     } else {
-      setVerificationStatus("fail");
+      const errorMessage = result.error ? dict.verify[result.error as keyof typeof dict.verify] : dict.verify.failDescription;
+      setVerificationStatus({ status: "fail", message: errorMessage });
     }
 
     setIsLoading(false);
@@ -91,7 +95,7 @@ export default function VerifyPage() {
                 )}
               />
 
-              {verificationStatus === "success" && (
+              {verificationStatus.status === "success" && (
                 <Alert variant="default" className="bg-green-50 border-green-200">
                   <CheckCircle className="h-4 w-4 text-green-600" />
                   <AlertTitle className="text-green-800">{dict.verify.successTitle}</AlertTitle>
@@ -101,12 +105,12 @@ export default function VerifyPage() {
                 </Alert>
               )}
 
-              {verificationStatus === "fail" && (
+              {verificationStatus.status === "fail" && (
                 <Alert variant="destructive">
                   <AlertTriangle className="h-4 w-4" />
                   <AlertTitle>{dict.verify.failTitle}</AlertTitle>
                   <AlertDescription>
-                   {dict.verify.failDescription}
+                   {verificationStatus.message || dict.verify.failDescription}
                   </AlertDescription>
                 </Alert>
               )}
@@ -114,11 +118,14 @@ export default function VerifyPage() {
             <CardContent>
               <Button type="submit" className="w-full bg-accent text-accent-foreground hover:bg-accent/90" disabled={isLoading}>
                 {isLoading ? (
-                  <Loader2 className="animate-spin" />
+                  <>
+                    <Loader2 className="animate-spin" />
+                    {dict.verify.verifyingButton}
+                  </>
                 ) : (
                   <>
-                  <Search className="mr-2 h-4 w-4" />
-                  {dict.verify.verifyButton}
+                    <Search className="mr-2 h-4 w-4" />
+                    {dict.verify.verifyButton}
                   </>
                 )}
               </Button>

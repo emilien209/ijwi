@@ -68,7 +68,7 @@ export default function AdminLayout({
   if (isAuthenticated === null) {
       return (
           <div className="flex min-h-screen items-center justify-center">
-              <p>Loading...</p>
+              <p>{dict.admin.auth.loading}</p>
           </div>
       )
   }
@@ -81,7 +81,7 @@ export default function AdminLayout({
     // This will be shown briefly before redirection
     return (
       <div className="flex min-h-screen items-center justify-center">
-          <p>Redirecting to login...</p>
+          <p>{dict.admin.auth.redirecting}</p>
       </div>
     );
   }
@@ -112,7 +112,7 @@ export default function AdminLayout({
             <SidebarFooter>
                 <Button variant="ghost" onClick={handleLogout} className="justify-start">
                     <LogOut />
-                    <span>Logout</span>
+                    <span>{dict.admin.auth.logout}</span>
                 </Button>
             </SidebarFooter>
         </Sidebar>
@@ -127,5 +127,3 @@ export default function AdminLayout({
     </SidebarProvider>
   );
 }
-
-    

@@ -93,12 +93,12 @@ export default function ElectionResultsPage() {
              <Card className="w-full max-w-4xl mx-auto shadow-2xl text-center">
                 <CardHeader>
                     <CardTitle className="text-3xl font-bold font-headline text-primary">
-                        Results are not yet available.
+                        {dict.results.unavailableTitle}
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
                     <CardDescription className="text-lg">
-                        The election is still active. Final results will be published here once the election has concluded.
+                        {dict.results.unavailableDescription}
                     </CardDescription>
                 </CardContent>
              </Card>
@@ -155,7 +155,7 @@ export default function ElectionResultsPage() {
           </ResponsiveContainer>
             ) : (
                 <div className="flex items-center justify-center h-full">
-                    <p className="text-muted-foreground">No voting data available yet.</p>
+                    <p className="text-muted-foreground">{dict.results.noData}</p>
                 </div>
             )
           }
@@ -164,4 +164,3 @@ export default function ElectionResultsPage() {
     </div>
   );
 }
-

@@ -61,15 +61,15 @@ export default function AdminAuthPage() {
       if (values.password === ADMIN_PASSWORD) {
         sessionStorage.setItem(ADMIN_AUTH_TOKEN, 'true');
         toast({
-          title: "Access Granted",
-          description: "Redirecting to admin dashboard...",
+          title: dict.admin.auth.successTitle,
+          description: dict.admin.auth.successDescription,
         });
         router.replace('/admin');
       } else {
         toast({
           variant: 'destructive',
-          title: 'Access Denied',
-          description: 'Incorrect password. Please try again.',
+          title: dict.admin.auth.errorTitle,
+          description: dict.admin.auth.errorDescription,
         });
         setIsLoading(false);
       }
@@ -85,9 +85,9 @@ export default function AdminAuthPage() {
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
                 <KeyRound className="h-8 w-8 text-primary" />
               </div>
-              <CardTitle className="text-2xl font-bold">Admin Access</CardTitle>
+              <CardTitle className="text-2xl font-bold">{dict.admin.auth.title}</CardTitle>
               <CardDescription>
-                Enter the password to access the admin panel.
+                {dict.admin.auth.description}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -96,11 +96,11 @@ export default function AdminAuthPage() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Password</FormLabel>
+                    <FormLabel>{dict.admin.auth.passwordLabel}</FormLabel>
                     <FormControl>
                       <Input
                         type="password"
-                        placeholder="••••••••"
+                        placeholder={dict.admin.auth.passwordPlaceholder}
                         {...field}
                         disabled={isLoading}
                       />
@@ -113,9 +113,12 @@ export default function AdminAuthPage() {
             <CardContent>
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? (
-                  <Loader2 className="animate-spin" />
+                  <>
+                    <Loader2 className="animate-spin" />
+                    <span>{dict.admin.auth.unlockingButton}</span>
+                  </>
                 ) : (
-                  'Unlock'
+                  dict.admin.auth.unlockButton
                 )}
               </Button>
             </CardContent>

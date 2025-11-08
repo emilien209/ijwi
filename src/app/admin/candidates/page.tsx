@@ -104,8 +104,8 @@ export default function CandidatesPage() {
     if (!imageUrl) {
         toast({
             variant: "destructive",
-            title: "Image Required",
-            description: "Please provide an image URL or upload a file.",
+            title: dict.admin.candidates.imageRequired,
+            description: dict.admin.candidates.imageRequiredDescription,
         });
         return;
     }
@@ -121,8 +121,8 @@ export default function CandidatesPage() {
     addDoc(candidatesCol, newCandidate)
         .then(() => {
             toast({
-              title: "Candidate Added",
-              description: `${values.name} has been added to the list.`,
+              title: dict.appName,
+              description: dict.admin.candidates.addSuccess.replace('{candidateName}', values.name),
             });
             form.reset();
             setPreviewImage(null);
@@ -146,8 +146,8 @@ export default function CandidatesPage() {
     deleteDoc(docRef)
         .then(() => {
              toast({ 
-              title: "Candidate Removed", 
-              description: `${candidate.name} has been removed.`, 
+              title: dict.appName,
+              description: dict.admin.candidates.removeSuccess.replace('{candidateName}', candidate.name),
             });
         })
         .catch(serverError => {
@@ -165,7 +165,7 @@ export default function CandidatesPage() {
         <div className="lg:col-span-2 space-y-8">
           <Card>
             <CardHeader>
-              <CardTitle>{dict.admin?.currentCandidates || "Current Candidates"}</CardTitle>
+              <CardTitle>{dict.admin.candidates.title}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               {candidatesLoading || groupsLoading ? (
@@ -212,7 +212,7 @@ export default function CandidatesPage() {
                               onClick={() => removeCandidate(candidate)}
                             >
                               <Trash2 className="mr-2 h-4 w-4" /> 
-                              Remove
+                              {dict.admin.candidates.removeButton}
                             </Button>
                           </CardFooter>
                         </Card>
@@ -224,7 +224,7 @@ export default function CandidatesPage() {
                 <div className="text-center py-10 border-2 border-dashed rounded-lg">
                   <User className="mx-auto h-12 w-12 text-muted-foreground" />
                   <p className="mt-4 text-muted-foreground">
-                    {dict.admin?.noCandidates || "No candidates added yet."}
+                    {dict.admin.candidates.noCandidates}
                   </p>
                 </div>
               )}
@@ -235,7 +235,7 @@ export default function CandidatesPage() {
         <div className="lg:col-span-1">
           <Card>
             <CardHeader>
-              <CardTitle>{dict.admin?.addCandidate || "Add Candidate"}</CardTitle>
+              <CardTitle>{dict.admin.candidates.addTitle}</CardTitle>
             </CardHeader>
             <CardContent>
               <Form {...form}>
@@ -245,11 +245,11 @@ export default function CandidatesPage() {
                       name="groupId"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Election Group</FormLabel>
+                          <FormLabel>{dict.admin.candidates.groupLabel}</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value} disabled={groupsLoading}>
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Select an election group" />
+                                <SelectValue placeholder={dict.admin.candidates.groupPlaceholder} />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
@@ -268,10 +268,10 @@ export default function CandidatesPage() {
                     name="name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>{dict.admin?.candidateName || "Candidate Name"}</FormLabel>
+                        <FormLabel>{dict.admin.candidates.nameLabel}</FormLabel>
                         <FormControl>
                           <Input 
-                            placeholder={dict.admin?.candidateNamePlaceholder || "Enter candidate name"} 
+                            placeholder={dict.admin.candidates.namePlaceholder} 
                             {...field} 
                           />
                         </FormControl>
@@ -282,8 +282,8 @@ export default function CandidatesPage() {
 
                   <Tabs defaultValue="url" className="w-full">
                     <TabsList className="grid w-full grid-cols-2">
-                      <TabsTrigger value="url">From URL</TabsTrigger>
-                      <TabsTrigger value="upload">Upload</TabsTrigger>
+                      <TabsTrigger value="url">{dict.admin.candidates.tabUrl}</TabsTrigger>
+                      <TabsTrigger value="upload">{dict.admin.candidates.tabUpload}</TabsTrigger>
                     </TabsList>
                     
                     <TabsContent value="url" className="pt-4">
@@ -292,10 +292,10 @@ export default function CandidatesPage() {
                         name="imageUrl"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>{dict.admin?.candidatePhoto || "Candidate Photo"}</FormLabel>
+                            <FormLabel>{dict.admin.candidates.photoUrlLabel}</FormLabel>
                             <FormControl>
                               <Input 
-                                placeholder={dict.admin?.candidatePhotoPlaceholder || "https://example.com/photo.jpg"} 
+                                placeholder={dict.admin.candidates.photoUrlPlaceholder}
                                 {...field}
                                 onChange={(e) => {
                                   field.onChange(e);
@@ -317,16 +317,16 @@ export default function CandidatesPage() {
                         name="uploadedImage"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Upload Image</FormLabel>
+                            <FormLabel>{dict.admin.candidates.uploadLabel}</FormLabel>
                             <FormControl>
                               <div className="flex items-center justify-center w-full">
                                 <label htmlFor="dropzone-file" className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-muted hover:bg-muted/80">
                                   <div className="flex flex-col items-center justify-center pt-5 pb-6">
                                     <Upload className="w-8 h-8 mb-2 text-muted-foreground"/>
                                     <p className="mb-2 text-sm text-center text-muted-foreground">
-                                      <span className="font-semibold">Click to upload</span> or drag and drop
+                                      <span className="font-semibold">{dict.admin.candidates.uploadHint}</span>
                                     </p>
-                                    <p className="text-xs text-muted-foreground">PNG, JPG or GIF</p>
+                                    <p className="text-xs text-muted-foreground">{dict.admin.candidates.uploadHintSmall}</p>
                                   </div>
                                   <Input 
                                     id="dropzone-file" 
@@ -360,7 +360,7 @@ export default function CandidatesPage() {
 
                   <Button type="submit" className="w-full">
                     <PlusCircle className="mr-2 h-4 w-4"/>
-                    {dict.admin?.addCandidate || "Add Candidate"}
+                    {dict.admin.candidates.addButton}
                   </Button>
                 </form>
               </Form>
@@ -371,5 +371,3 @@ export default function CandidatesPage() {
     </div>
   );
 }
-
-    

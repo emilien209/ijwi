@@ -80,20 +80,19 @@ export default function VotePage() {
 
   useEffect(() => {
     const id = sessionStorage.getItem('nationalId');
-    if (!id) {
-        if (authChecked) {
-             toast({
-                variant: 'destructive',
-                title: "Authentication Error",
-                description: "National ID not found. Please log in again.",
-            });
-            router.push('/');
-        }
-    } else {
+    if (id) {
       setNationalId(id);
+    } else if (authChecked) { // Only redirect if we've already checked and it's not there
+      toast({
+        variant: 'destructive',
+        title: dict.vote.authErrorTitle,
+        description: dict.vote.authErrorDescription,
+      });
+      router.push('/');
     }
-    setAuthChecked(true);
-  }, [router, toast, authChecked]);
+    setAuthChecked(true); // Mark that we have checked for the ID
+  }, [router, toast, authChecked, dict]);
+
 
   useEffect(() => {
     if (!nationalId || !db || !groups) return;
@@ -118,8 +117,8 @@ export default function VotePage() {
     if (!selectedCandidate || !nationalId || !db) {
         toast({
             variant: "destructive",
-            title: "Error",
-            description: "Please select a candidate and make sure you are logged in.",
+            title: dict.vote.noSelectionErrorTitle,
+            description: dict.vote.noSelectionErrorDescription,
         });
         return;
     }
@@ -150,8 +149,8 @@ export default function VotePage() {
         // Do not close the dialog on error
         toast({
           variant: "destructive",
-          title: "Submission Failed",
-          description: "Your vote could not be submitted. Please try again.",
+          title: dict.vote.errorToastTitle,
+          description: dict.vote.errorToastDescription,
         });
         const permissionError = new FirestorePermissionError({
           path: voteRef.path,
@@ -166,8 +165,8 @@ export default function VotePage() {
     if (votedGroups.includes(candidate.groupId)) {
         toast({
             variant: "default",
-            title: "Already Voted",
-            description: "You have already cast a vote in this group.",
+            title: dict.vote.alreadyVotedToastTitle,
+            description: dict.vote.alreadyVotedToastDescription,
         });
         return;
     }
@@ -176,7 +175,7 @@ export default function VotePage() {
   
   const isLoadingAnything = candidatesLoading || groupsLoading || settingsLoading || !authChecked;
 
-  if (!authChecked) {
+  if (isLoadingAnything && !authChecked) {
       return (
           <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center p-4">
               <Loader2 className="animate-spin h-8 w-8" />
@@ -193,15 +192,15 @@ export default function VotePage() {
                         <Ban className="h-8 w-8 text-destructive" />
                     </div>
                     <CardTitle className="text-3xl font-bold font-headline text-destructive">
-                        The Election Has Ended
+                        {dict.vote.electionEndedTitle}
                     </CardTitle>
                     <CardDescription className="text-lg">
-                        The voting period is now closed. Thank you for your participation.
+                        {dict.vote.electionEndedDescription}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <Link href="/results">
-                        <Button>View Final Results</Button>
+                        <Button>{dict.vote.viewResultsButton}</Button>
                     </Link>
                 </CardContent>
             </Card>
@@ -240,7 +239,7 @@ export default function VotePage() {
                             </div>
                             <div className="flex items-center gap-2 text-muted-foreground text-sm p-4 border-2 border-dashed rounded-lg w-full justify-center">
                               <AlertCircle className="h-5 w-5" />
-                              <span>No candidates have been added to this group yet.</span>
+                              <span>{dict.vote.noCandidatesMessage}</span>
                             </div>
                         </div>
                       )
@@ -257,7 +256,7 @@ export default function VotePage() {
                                     {hasVotedInGroup ? (
                                         <div className="flex items-center gap-2 text-green-600">
                                             <Check className="h-5 w-5" />
-                                            <span>Voted</span>
+                                            <span>{dict.vote.votedLabel}</span>
                                         </div>
                                     ) : (
                                         <ChevronDown className={cn("h-6 w-6 transition-transform", openGroup === group.id && "rotate-180")} />
