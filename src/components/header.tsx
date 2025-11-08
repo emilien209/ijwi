@@ -9,7 +9,6 @@ import { cn } from "@/lib/utils";
 const navLinks = [
     { href: "/dashboard", key: "navDashboard" },
     { href: "/verify", key: "navVerify" },
-    { href: "/translate", key: "navTranslate" },
     { href: "/admin/fraud-detection", key: "navAdmin" },
 ];
 
@@ -41,7 +40,6 @@ export function Header() {
             ))}
         </nav>
         <div className="flex flex-1 items-center justify-end space-x-4">
-          {/* <LanguageSwitcher /> */}
         </div>
       </div>
     </header>
