@@ -2,6 +2,7 @@
 
 import { translateText, type MultilingualSupportInput } from "@/ai/flows/multilingual-support";
 import { analyzeVotingPatterns, type AnalyzeVotingPatternsInput } from "@/ai/flows/fraud-detection";
+import { verifyNationalId, type NidaVerificationInput } from "@/ai/flows/nida-verification";
 
 export async function handleTranslation(input: MultilingualSupportInput) {
   try {
@@ -20,5 +21,18 @@ export async function handleFraudAnalysis(input: AnalyzeVotingPatternsInput) {
   } catch (error) {
     console.error("Fraud analysis error:", error);
     return { success: false, error: "Failed to analyze data." };
+  }
+}
+
+export async function handleNidaVerification(input: NidaVerificationInput) {
+  try {
+    const result = await verifyNationalId(input);
+    if (result.isValid) {
+      return { success: true, data: result };
+    }
+    return { success: false, error: "Invalid or unregistered National ID." };
+  } catch (error) {
+    console.error("NIDA verification error:", error);
+    return { success: false, error: "Could not connect to verification service." };
   }
 }

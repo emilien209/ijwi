@@ -18,7 +18,6 @@ import {
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -28,81 +27,49 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useDictionary } from "@/hooks/use-dictionary";
 import { Loader2, ShieldCheck } from "lucide-react";
-import { useFirestore } from "@/firebase";
-import { doc, getDoc } from "firebase/firestore";
+import { handleNidaVerification } from "@/app/actions";
 
 const formSchema = z.object({
   nationalId: z.string().length(16, "National ID must be 16 digits."),
-  otp: z.string().optional(),
 });
 
 export default function LoginPage() {
-  const [otpSent, setOtpSent] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
   const { dict } = useDictionary();
-  const db = useFirestore();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       nationalId: "",
-      otp: "",
     },
   });
 
-  const handleRequestOtp = async () => {
-    const isIdValid = await form.trigger("nationalId");
-    if (!isIdValid) {
-      return;
-    }
-    
-    const nationalId = form.getValues("nationalId");
-    
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
 
-    // Simulate API call to request OTP
-    setTimeout(() => {
-      setOtpSent(true);
-      setIsLoading(false);
+    const result = await handleNidaVerification({ nationalId: values.nationalId });
+
+    if (result.success && result.data) {
+      // Store the ID in session storage to pass to the voting page.
+      sessionStorage.setItem('nationalId', values.nationalId);
+      sessionStorage.setItem('voterName', result.data.fullName || "Voter");
+      
       toast({
-        title: dict.login.otpSentTitle,
-        description: dict.login.otpSentDescription,
+        title: dict.login.loginSuccessTitle,
+        description: `Welcome, ${result.data.fullName}! ${dict.login.loginSuccessDescription}`,
       });
-      // Focus the OTP input after it appears
-      setTimeout(() => {
-        const otpInput = document.getElementById("otp");
-        if (otpInput) {
-          otpInput.focus();
-        }
-      }, 100);
-    }, 1500);
-  };
+      router.push("/dashboard");
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    setIsLoading(true);
-    // Simulate OTP verification
-    setTimeout(() => {
-      if (values.otp === "123456") { // Mock OTP
-        // In a real app, the user would be properly authenticated here.
-        // We'll store the ID in session storage to pass to the voting page.
-        sessionStorage.setItem('nationalId', values.nationalId);
-        
-        toast({
-          title: dict.login.loginSuccessTitle,
-          description: dict.login.loginSuccessDescription,
-        });
-        router.push("/dashboard");
-      } else {
-        toast({
-          variant: "destructive",
-          title: dict.login.loginErrorTitle,
-          description: dict.login.loginErrorDescription,
-        });
-        setIsLoading(false);
-      }
-    }, 1500);
+    } else {
+      toast({
+        variant: "destructive",
+        title: dict.login.loginErrorTitle,
+        description: result.error || dict.login.loginErrorDescription,
+      });
+      setIsLoading(false);
+    }
   }
 
   return (
@@ -131,63 +98,22 @@ export default function LoginPage() {
                         placeholder={dict.login.nationalIdPlaceholder}
                         {...field}
                         maxLength={16}
-                        disabled={otpSent || isLoading}
+                        disabled={isLoading}
                       />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-
-              {otpSent && (
-                <FormField
-                  control={form.control}
-                  name="otp"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{dict.login.otpLabel}</FormLabel>
-                      <FormControl>
-                        <Input
-                          id="otp"
-                          placeholder="_ _ _ _ _ _"
-                          {...field}
-                          disabled={isLoading}
-                          autoComplete="one-time-code"
-                          className="tracking-[1em] text-center"
-                        />
-                      </FormControl>
-                       <FormDescription>
-                        {dict.login.otpHint}
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
             </CardContent>
             <CardFooter className="flex flex-col gap-4">
-              {!otpSent ? (
-                <Button
-                  type="button"
-                  onClick={handleRequestOtp}
-                  className="w-full bg-accent text-accent-foreground hover:bg-accent/90"
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <Loader2 className="animate-spin" />
-                  ) : (
-                    dict.login.requestOtpButton
-                  )}
-                </Button>
-              ) : (
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? (
-                    <Loader2 className="animate-spin" />
-                  ) : (
-                    dict.login.loginButton
-                  )}
-                </Button>
-              )}
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? (
+                  <Loader2 className="animate-spin" />
+                ) : (
+                  dict.login.loginButton
+                )}
+              </Button>
               <p className="text-xs text-muted-foreground text-center">{dict.login.supportText}</p>
             </CardFooter>
           </form>
