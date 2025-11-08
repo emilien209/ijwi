@@ -21,32 +21,53 @@ import {
 import { useCollection } from "@/firebase";
 import { Skeleton } from "@/components/ui/skeleton";
 
-const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
+const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#AF19FF", "#FF8C00"];
+
 
 interface Vote {
+    candidateId: string;
     candidateName: string;
+}
+
+interface Candidate {
+    id: string;
+    name: string;
 }
 
 export default function ElectionResultsPage() {
   const { dict } = useDictionary();
   const { data: votes, isLoading: votesLoading } = useCollection<Vote>('votes');
+  const { data: candidates, isLoading: candidatesLoading } = useCollection<Candidate>('candidates');
+  
+  const electionStatus = "active"; // "active" or "ended"
 
   const electionData = useMemo(() => {
-    if (!votes) return [];
+    if (!votes || !candidates) return [];
 
     const voteCounts = new Map<string, number>();
+    candidates.forEach(c => voteCounts.set(c.name, 0)); // Initialize all candidates with 0 votes
+
     votes.forEach(vote => {
-        const name = vote.candidateName || "Abstain";
-        voteCounts.set(name, (voteCounts.get(name) || 0) + 1);
+        if(vote.candidateName) {
+            voteCounts.set(vote.candidateName, (voteCounts.get(vote.candidateName) || 0) + 1);
+        }
     });
 
-    return Array.from(voteCounts.entries()).map(([name, count]) => ({
+    const data = Array.from(voteCounts.entries()).map(([name, count]) => ({
         name,
         votes: count,
     }));
-  }, [votes]);
+    
+    // Only return candidates who have votes or if there are no votes at all.
+    if(votes.length > 0) {
+        return data.filter(d => d.votes > 0);
+    }
+    return data;
 
-  const electionStatus = "ended"; // "active" or "ended"
+  }, [votes, candidates]);
+  
+  const isLoading = votesLoading || candidatesLoading;
+
 
   return (
     <div className="space-y-8">
@@ -60,11 +81,11 @@ export default function ElectionResultsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="h-[500px]">
-          { votesLoading ? (
+          { isLoading ? (
             <div className="flex items-center justify-center h-full">
               <Skeleton className="w-full h-[450px]" />
             </div>
-           ) :
+           ) : electionData && electionData.length > 0 ? (
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
@@ -101,6 +122,11 @@ export default function ElectionResultsPage() {
               <Legend />
             </PieChart>
           </ResponsiveContainer>
+            ) : (
+                <div className="flex items-center justify-center h-full">
+                    <p className="text-muted-foreground">No voting data available yet.</p>
+                </div>
+            )
           }
         </CardContent>
       </Card>
