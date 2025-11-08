@@ -13,8 +13,8 @@ export const fr: Dictionary = {
   login: {
     title: "Vérification d'Identité",
     description: "Veuillez entrer votre ID National pour commencer.",
-    nationalIdLabel: "ID National",
-    nationalIdPlaceholder: "Entrez votre numéro d'ID National",
+    nationalIdLabel: "ID National (16 chiffres)",
+    nationalIdPlaceholder: "Entrez votre numéro d'ID National à 16 chiffres",
     otpLabel: "Mot de Passe à Usage Unique (OTP)",
     otpHint: "Pour la démo, utilisez 123456",
     requestOtpButton: "Demander l'OTP",

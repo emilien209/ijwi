@@ -11,8 +11,8 @@ export const en = {
   login: {
     title: "Identity Verification",
     description: "Please enter your National ID to begin.",
-    nationalIdLabel: "National ID",
-    nationalIdPlaceholder: "Enter your National ID number",
+    nationalIdLabel: "National ID (16 digits)",
+    nationalIdPlaceholder: "Enter your 16-digit National ID",
     otpLabel: "One-Time Password (OTP)",
     otpHint: "For demo, use 123456",
     requestOtpButton: "Request OTP",

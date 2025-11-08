@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -28,9 +29,12 @@ import { useDictionary } from "@/hooks/use-dictionary";
 import { Loader2, ShieldCheck } from "lucide-react";
 
 const formSchema = z.object({
-  nationalId: z.string().min(10, "National ID is required."),
+  nationalId: z.string().length(16, "National ID must be 16 digits."),
   otp: z.string().optional(),
 });
+
+// In a real app, this would be a persistent store (e.g., Firestore)
+const votedIDs = new Set<string>();
 
 export default function LoginPage() {
   const [otpSent, setOtpSent] = useState(false);
@@ -52,6 +56,17 @@ export default function LoginPage() {
     if (!isIdValid) {
       return;
     }
+    
+    const nationalId = form.getValues("nationalId");
+    if (votedIDs.has(nationalId)) {
+        toast({
+            variant: "destructive",
+            title: "Already Voted",
+            description: "This National ID has already been used to vote.",
+        });
+        return;
+    }
+    
     setIsLoading(true);
     // Simulate API call to request OTP
     setTimeout(() => {
@@ -76,6 +91,7 @@ export default function LoginPage() {
     // Simulate OTP verification
     setTimeout(() => {
       if (values.otp === "123456") { // Mock OTP
+        votedIDs.add(values.nationalId); // Mark ID as voted
         toast({
           title: dict.login.loginSuccessTitle,
           description: dict.login.loginSuccessDescription,
@@ -117,6 +133,7 @@ export default function LoginPage() {
                       <Input
                         placeholder={dict.login.nationalIdPlaceholder}
                         {...field}
+                        maxLength={16}
                         disabled={otpSent || isLoading}
                       />
                     </FormControl>

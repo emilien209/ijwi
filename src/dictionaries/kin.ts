@@ -13,8 +13,8 @@ export const kin: Dictionary = {
   login: {
     title: "Kwemeza Umwirondoro",
     description: "Nyamuneka, injiza nimero y'indangamuntu yawe kugira ngo utangire.",
-    nationalIdLabel: "Nimero y'Indangamuntu",
-    nationalIdPlaceholder: "Injiza nimero y'indangamuntu yawe",
+    nationalIdLabel: "Nimero y'Indangamuntu (imibare 16)",
+    nationalIdPlaceholder: "Injiza nimero y'indangamuntu yawe y'imibare 16",
     otpLabel: "Kode y'Iremezo (OTP)",
     otpHint: "Ku ngeragezwa, koresha 123456",
     requestOtpButton: "Saba OTP",
