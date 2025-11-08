@@ -31,7 +31,7 @@ const formSchema = z.object({
   password: z.string().min(1, 'Password is required.'),
 });
 
-const ADMIN_PASSWORD = '{onerwanda@}';
+const ADMIN_PASSWORD = 'onerwanda';
 export const ADMIN_AUTH_TOKEN = 'admin-auth-token';
 
 
