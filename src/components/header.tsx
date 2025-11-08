@@ -10,7 +10,7 @@ import { LanguageSwitcher } from "./language-switcher";
 
 const navLinks = [
     { href: "/dashboard", key: "navDashboard" },
-    { href: "/results", key: "navResults" },
+    { href: "/admin/results", key: "navResults" },
     { href: "/verify", key: "navVerify" },
     { href: "/admin", key: "navAdmin" },
 ];
@@ -35,7 +35,8 @@ export function Header() {
                     href={link.href}
                     className={cn(
                         "transition-colors hover:text-primary",
-                        pathname.startsWith(link.href) ? "text-primary" : "text-muted-foreground"
+                        pathname.startsWith(link.href) && link.href !== '/' ? "text-primary" : "text-muted-foreground",
+                        pathname === '/' && link.href === '/' && "text-primary"
                     )}
                 >
                     {dict[link.key as keyof typeof dict]}
@@ -49,3 +50,5 @@ export function Header() {
     </header>
   );
 }
+
+    

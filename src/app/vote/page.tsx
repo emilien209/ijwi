@@ -67,7 +67,7 @@ export default function VotePage() {
 
 
   const handleVoteSubmit = () => {
-    if (!selectedCandidate || !nationalId) {
+    if (!selectedCandidate || !nationalId || !db) {
         toast({
             variant: "destructive",
             title: "Error",
@@ -104,11 +104,6 @@ export default function VotePage() {
           requestResourceData: voteData,
         });
         errorEmitter.emit('permission-error', permissionError);
-        toast({
-            variant: "destructive",
-            title: "Vote Failed",
-            description: "Could not submit your vote. You may have already voted or there was a server error.",
-        });
       });
   };
   
@@ -134,7 +129,10 @@ export default function VotePage() {
                     <div key={i} className="flex items-center gap-4 rounded-lg border-2 p-4">
                         <Skeleton className="h-6 w-6 rounded-full" />
                         <Skeleton className="h-16 w-16 rounded-full" />
-                        <Skeleton className="h-6 w-40" />
+                        <div className="space-y-2">
+                           <Skeleton className="h-6 w-40" />
+                           <Skeleton className="h-4 w-20" />
+                        </div>
                     </div>
                 ))}
             </div>
@@ -212,3 +210,5 @@ export default function VotePage() {
     </div>
   );
 }
+
+    

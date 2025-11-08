@@ -113,15 +113,11 @@ export default function CandidatesPage() {
                 requestResourceData: newCandidate,
             });
             errorEmitter.emit('permission-error', permissionError);
-             toast({
-                variant: 'destructive',
-                title: 'Error Adding Candidate',
-                description: 'You might not have permission to add candidates.',
-            });
         });
   }
 
   const removeCandidate = (candidate: Candidate) => {
+    if (!db) return;
     const docRef = doc(db, 'candidates', candidate.id);
     deleteDoc(docRef)
         .then(() => {
@@ -136,11 +132,6 @@ export default function CandidatesPage() {
                 operation: 'delete',
             });
             errorEmitter.emit('permission-error', permissionError);
-            toast({
-                variant: 'destructive',
-                title: 'Error Removing Candidate',
-                description: 'You might not have permission to remove candidates.',
-            });
         });
   };
 
@@ -325,3 +316,5 @@ export default function CandidatesPage() {
     </div>
   );
 }
+
+    

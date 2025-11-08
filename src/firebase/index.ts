@@ -1,3 +1,4 @@
+
 // src/firebase/index.ts
 'use client';
 
@@ -12,23 +13,16 @@ export * from './auth/use-user';
 export * from './firestore/use-collection';
 export * from './firestore/use-doc';
 
-let app: FirebaseApp;
-let auth: Auth;
-let db: Firestore;
-
-function initializeFirebase() {
-  if (!getApps().length) {
-    app = initializeApp(firebaseConfig);
-  } else {
-    app = getApp();
-  }
-  auth = getAuth(app);
-  db = getFirestore(app);
-
-  return { app, auth, db };
+let firebaseApp: FirebaseApp;
+if (!getApps().length) {
+  firebaseApp = initializeApp(firebaseConfig);
+} else {
+  firebaseApp = getApp();
 }
 
-// Get the initialized instances
-const { app: firebaseApp, auth: firebaseAuth, db: firestoreDb } = initializeFirebase();
+const firebaseAuth = getAuth(firebaseApp);
+const firestoreDb = getFirestore(firebaseApp);
 
 export { firebaseApp, firebaseAuth, firestoreDb };
+
+    
