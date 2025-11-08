@@ -61,24 +61,6 @@ export default function LoginPage() {
     const nationalId = form.getValues("nationalId");
     
     setIsLoading(true);
-    
-    try {
-      const userVoteDoc = await getDoc(doc(db, "votes", nationalId));
-      if (userVoteDoc.exists()) {
-        toast({
-          variant: "destructive",
-          title: "Already Voted",
-          description: "This National ID has already been used to vote.",
-        });
-        setIsLoading(false);
-        return;
-      }
-    } catch(e) {
-        // We can ignore this error for now, as it might be a permissions issue
-        // for checking a non-existent document. The security rules should
-        // prevent a second vote anyway.
-    }
-
 
     // Simulate API call to request OTP
     setTimeout(() => {
