@@ -6,11 +6,12 @@ import { useDictionary } from "@/hooks/use-dictionary";
 import { Vote } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { LanguageSwitcher } from "./language-switcher";
 
 const navLinks = [
     { href: "/dashboard", key: "navDashboard" },
     { href: "/verify", key: "navVerify" },
-    { href: "/admin/fraud-detection", key: "navAdmin" },
+    { href: "/admin", key: "navAdmin" },
 ];
 
 export function Header() {
@@ -33,7 +34,7 @@ export function Header() {
                     href={link.href}
                     className={cn(
                         "transition-colors hover:text-primary",
-                        pathname === link.href ? "text-primary" : "text-muted-foreground"
+                        pathname.startsWith(link.href) ? "text-primary" : "text-muted-foreground"
                     )}
                 >
                     {dict[link.key as keyof typeof dict]}
@@ -41,6 +42,7 @@ export function Header() {
             ))}
         </nav>
         <div className="flex flex-1 items-center justify-end space-x-4">
+            <LanguageSwitcher />
         </div>
       </div>
     </header>

@@ -1,11 +1,14 @@
+
 import { type Dictionary } from '.';
 
 export const fr: Dictionary = {
   appName: "La Voix du Citoyen",
   navDashboard: "Tableau de bord",
   navVerify: "Vérifier le Vote",
-  navTranslate: "Traduire",
-  navAdmin: "Admin",
+  navAdmin: "Panneau d'Admin",
+  navCandidates: "Candidats",
+  navResults: "Résultats",
+  navFraud: "Détection de Fraude",
 
   login: {
     title: "Vérification d'Identité",
@@ -75,22 +78,28 @@ export const fr: Dictionary = {
     failTitle: "Échec de la Vérification",
     failDescription: "Ce code de reçu n'a pas été trouvé. Veuillez vérifier le code et réessayer.",
   },
-  
-  translate: {
-      title: "Outil de Support Multilingue",
-      description: "Traduisez du texte entre les langues officielles.",
-      textLabel: "Texte à Traduire",
-      textPlaceholder: "Entrez le texte ici...",
-      languageLabel: "Traduire en",
-      languagePlaceholder: "Sélectionnez une langue",
-      langEnglish: "Anglais",
-      langFrench: "Français",
-      langKinyarwanda: "Kinyarwanda",
-      translateButton: "Traduire",
-      translatingButton: "Traduction...",
-      resultTitle: "Résultat de la Traduction",
-      errorTitle: "Échec de la Traduction",
-      errorDescription: "Impossible de traduire le texte pour le moment.",
+
+  admin: {
+    title: "Admin",
+    dashboardTitle: "Tableau de Bord Électoral",
+    dashboardDescription: "Un aperçu de l'état actuel de l'élection et des résultats.",
+    totalVotes: "Total des Votes Exprimés",
+    electionStatus: "Statut de l'Élection",
+    statusActive: "Actif",
+    statusEnded: "Terminé",
+    resultsTitle: "Résultats en Direct",
+    votesLabel: "Votes",
+    manageCandidates: "Gérer les Candidats",
+    goToCandidates: "Voir les Candidats",
+    candidatesTitle: "Gestion des Candidats",
+    candidatesDescription: "Ajoutez, consultez et gérez les candidats pour l'élection.",
+    addCandidate: "Ajouter un Candidat",
+    candidateName: "Nom du Candidat",
+    candidateNamePlaceholder: "Entrez le nom complet du candidat",
+    candidatePhoto: "URL de la Photo",
+    candidatePhotoPlaceholder: "https://example.com/photo.jpg",
+    currentCandidates: "Candidats Actuels",
+    noCandidates: "Aucun candidat n'a encore été ajouté.",
   },
 
   fraud: {

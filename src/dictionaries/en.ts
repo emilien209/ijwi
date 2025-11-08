@@ -1,9 +1,12 @@
+
 export const en = {
   appName: "Citizen's Voice",
   navDashboard: "Dashboard",
   navVerify: "Verify Vote",
-  navTranslate: "Translate",
-  navAdmin: "Admin",
+  navAdmin: "Admin Panel",
+  navCandidates: "Candidates",
+  navResults: "Results",
+  navFraud: "Fraud Detection",
 
   login: {
     title: "Identity Verification",
@@ -74,21 +77,27 @@ export const en = {
     failDescription: "This receipt code was not found. Please double-check the code and try again.",
   },
   
-  translate: {
-      title: "Multilingual Support Tool",
-      description: "Translate text between the official languages.",
-      textLabel: "Text to Translate",
-      textPlaceholder: "Enter text here...",
-      languageLabel: "Translate to",
-      languagePlaceholder: "Select a language",
-      langEnglish: "English",
-      langFrench: "French",
-      langKinyarwanda: "Kinyarwanda",
-      translateButton: "Translate",
-      translatingButton: "Translating...",
-      resultTitle: "Translation Result",
-      errorTitle: "Translation Failed",
-      errorDescription: "Could not translate the text at this time.",
+  admin: {
+    title: "Admin",
+    dashboardTitle: "Election Dashboard",
+    dashboardDescription: "An overview of the current election status and results.",
+    totalVotes: "Total Votes Cast",
+    electionStatus: "Election Status",
+    statusActive: "Active",
+    statusEnded: "Ended",
+    resultsTitle: "Live Results",
+    votesLabel: "Votes",
+    manageCandidates: "Manage Candidates",
+    goToCandidates: "View Candidates",
+    candidatesTitle: "Candidate Management",
+    candidatesDescription: "Add, view, and manage candidates for the election.",
+    addCandidate: "Add Candidate",
+    candidateName: "Candidate Name",
+    candidateNamePlaceholder: "Enter candidate's full name",
+    candidatePhoto: "Photo URL",
+    candidatePhotoPlaceholder: "https://example.com/photo.jpg",
+    currentCandidates: "Current Candidates",
+    noCandidates: "No candidates have been added yet.",
   },
 
   fraud: {

@@ -1,11 +1,14 @@
+
 import { type Dictionary } from '.';
 
 export const kin: Dictionary = {
   appName: "Ijwi ry'Umuturage",
   navDashboard: "Ahabanza",
   navVerify: "Genzura Ijwi",
-  navTranslate: "Hindura Ururimi",
   navAdmin: "Ubuyobozi",
+  navCandidates: "Abakandida",
+  navResults: "Ibyavuye mu Matora",
+  navFraud: "Gukumira Uburiganya",
 
   login: {
     title: "Kwemeza Umwirondoro",
@@ -75,22 +78,28 @@ export const kin: Dictionary = {
     failTitle: "Kugenzura Byanze",
     failDescription: "Iyi kode ya receipt ntabwo yabonetse. Nyamuneka, reba neza kode wongere ugerageze.",
   },
-  
-  translate: {
-      title: "Igikoresho cyo Guhindura Indimi",
-      description: "Hindura inyandiko hagati y'indimi zemewe.",
-      textLabel: "Inyandiko yo Guhindura",
-      textPlaceholder: "Andika inyandiko hano...",
-      languageLabel: "Hindura mu",
-      languagePlaceholder: "Hitamo ururimi",
-      langEnglish: "Icyongereza",
-      langFrench: "Igifaransa",
-      langKinyarwanda: "Ikinyarwanda",
-      translateButton: "Hindura",
-      translatingButton: "Kuguhindurira...",
-      resultTitle: "Ibyavuye mu Guhindura",
-      errorTitle: "Guhindura Byanze",
-      errorDescription: "Ntibishoboye guhindura inyandiko muri iki gihe.",
+
+  admin: {
+    title: "Ubuyobozi",
+    dashboardTitle: "Imbonerahamwe y'Amatora",
+    dashboardDescription: "Incamake y'uko amatora ahagaze n'ibyavuyemo.",
+    totalVotes: "Amajwi Yose Hamwe",
+    electionStatus: "Uko Amatora Ahagaze",
+    statusActive: "Arakomeje",
+    statusEnded: "Arangiye",
+    resultsTitle: "Ibyavuye mu Matora Live",
+    votesLabel: "Amajwi",
+    manageCandidates: "Gucunga Abakandida",
+    goToCandidates: "Reba Abakandida",
+    candidatesTitle: "Gucunga Abakandida",
+    candidatesDescription: "Ongeramo, urebe, kandi ucunge abakandida b'amatora.",
+    addCandidate: "Ongeramo Umukandida",
+    candidateName: "Izina ry'Umukandida",
+    candidateNamePlaceholder: "Injiza izina ryuzuye ry'umukandida",
+    candidatePhoto: "URL y'Ifoto",
+    candidatePhotoPlaceholder: "https://example.com/photo.jpg",
+    currentCandidates: "Abakandida Bariho",
+    noCandidates: "Nta mukandida urongerwamo.",
   },
 
   fraud: {
