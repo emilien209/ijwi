@@ -60,6 +60,16 @@
           "type": "string",
           "enum": ["active", "ended"],
           "description": "The current status of the election."
+        },
+        "startDate": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The start date and time for the election."
+        },
+        "endDate": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The end date and time for the election."
         }
       },
       "required": ["status"]
@@ -83,3 +93,5 @@
     }
   }
 }
+
+    

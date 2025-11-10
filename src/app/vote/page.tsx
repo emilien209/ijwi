@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -33,6 +33,7 @@ import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError } from "@/firebase/errors";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
+import { parseISO } from "date-fns";
 
 
 interface Candidate {
@@ -44,6 +45,8 @@ interface Candidate {
 
 interface ElectionSettings {
     status: 'active' | 'ended';
+    startDate?: string;
+    endDate?: string;
 }
 
 export default function VotePage() {
@@ -62,8 +65,21 @@ export default function VotePage() {
   const { data: candidates, isLoading: candidatesLoading } = useCollection<Candidate>("candidates");
   const { data: electionSettings, isLoading: settingsLoading } = useDoc<ElectionSettings>('settings/election');
   
-  const electionStatus = electionSettings?.status || "active";
   const GROUP_ID = "presidential_2024"; // Static group ID since groups are removed
+  
+  const electionStatus = useMemo(() => {
+    if (!electionSettings) return "active";
+    if (electionSettings.status === 'ended') return 'ended';
+
+    const now = new Date();
+    const start = electionSettings.startDate ? parseISO(electionSettings.startDate) : null;
+    const end = electionSettings.endDate ? parseISO(electionSettings.endDate) : null;
+
+    if (end && now > end) return 'ended';
+    if (start && now < start) return 'pending';
+    return 'active';
+  }, [electionSettings]);
+
 
   useEffect(() => {
     const id = sessionStorage.getItem('nationalId');
@@ -191,7 +207,10 @@ export default function VotePage() {
     )
   }
 
-  if (electionStatus === 'ended' && !settingsLoading) {
+  if (electionStatus === 'ended' || electionStatus === 'pending') {
+    const title = electionStatus === 'ended' ? dict.vote.electionEndedTitle : dict.vote.electionPendingTitle;
+    const description = electionStatus === 'ended' ? dict.vote.electionEndedDescription : dict.vote.electionPendingDescription;
+
     return (
         <div className="container mx-auto py-8 px-4">
             <Card className="w-full max-w-4xl mx-auto shadow-2xl text-center bg-card/80">
@@ -200,16 +219,18 @@ export default function VotePage() {
                         <Ban className="h-8 w-8 text-destructive" />
                     </div>
                     <CardTitle className="text-3xl font-bold font-headline text-destructive">
-                        {dict.vote.electionEndedTitle}
+                        {title}
                     </CardTitle>
                     <CardDescription className="text-lg">
-                        {dict.vote.electionEndedDescription}
+                        {description}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <Link href="/results">
-                        <Button>{dict.vote.viewResultsButton}</Button>
-                    </Link>
+                    {electionStatus === 'ended' && (
+                        <Link href="/results">
+                            <Button>{dict.vote.viewResultsButton}</Button>
+                        </Link>
+                    )}
                 </CardContent>
             </Card>
         </div>
@@ -312,3 +333,5 @@ export default function VotePage() {
     </div>
   );
 }
+
+    

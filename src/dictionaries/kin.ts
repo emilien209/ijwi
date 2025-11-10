@@ -65,6 +65,8 @@ export const kin: Dictionary = {
     noCandidatesMessage: "Nta bakandida barongerwa muri iri tsinda.",
     electionEndedTitle: "Amatora Yararangiye",
     electionEndedDescription: "Igihe cyo gutora cyararangiye. Murakoze kwitabira.",
+    electionPendingTitle: "Amatora Ntaratangira",
+    electionPendingDescription: "Igihe cyo gutora ntikiratangira. Nyamuneka uzagaruke nyuma.",
     viewResultsButton: "Reba Ibyavuye mu Matora",
     votedLabel: "Wamaze gutora",
   },
@@ -122,10 +124,11 @@ export const kin: Dictionary = {
         electionStatus: "Uko Amatora Ahagaze",
         statusActive: "Arakomeje",
         statusEnded: "Arangiye",
+        statusPending: "Ategereje",
         resultsTitle: "Ibyavuye mu Matora Ako kanya",
         votesLabel: "Amajwi",
         controlsTitle: "Ibicungura Amatora",
-        endElectionButton: "Soza Amatora",
+        endElectionButton: "Soza Amatora Nonaha",
         resetElectionButton: "Tangiza Amatora Mashya",
         endingButton: "Gusoza...",
         resettingButton: "Gutangiza...",
@@ -137,6 +140,12 @@ export const kin: Dictionary = {
         resetConfirmDescription: "Iki gikorwa ntigisubirwaho. Bizasiba burundu amajwi n'abakandida bariho, maze bitangize amatora mashya.",
         cancelButton: "Hagarika",
         continueButton: "Komeza",
+        scheduleTitle: "Teganya Amatora",
+        startDate: "Itariki yo Gutangira",
+        endDate: "Itariki yo Gusoreza",
+        setDatesButton: "Shyiraho Amatariki",
+        updateDatesSuccess: "Amatariki y'amatora yavuguruwe.",
+        updateDatesError: "Ntibishoboye kuvugurura amatariki y'amatora.",
     },
     groups: {
         title: "Amatsinda y'Amatora Ariho",
@@ -212,3 +221,5 @@ export const kin: Dictionary = {
     analysisErrorDescription: "Habaye ikosa mu gusesengura amakuru.",
   }
 };
+
+    

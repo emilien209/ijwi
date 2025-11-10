@@ -22,9 +22,9 @@ import {
 import { Button } from "@/components/ui/button";
 import Link from 'next/link';
 import { useFirestore, useCollection, useDoc } from "@/firebase";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { collection, doc, writeBatch, getDocs, setDoc } from "firebase/firestore";
+import { collection, doc, writeBatch, getDocs, setDoc, updateDoc } from "firebase/firestore";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -38,6 +38,15 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { CalendarIcon } from "lucide-react";
+import { format, parseISO } from "date-fns";
+import { cn } from "@/lib/utils";
 
 interface Vote {
     candidateId: string;
@@ -51,6 +60,8 @@ interface Candidate {
 
 interface ElectionSettings {
     status: 'active' | 'ended';
+    startDate?: string;
+    endDate?: string;
 }
 
 export default function AdminDashboardPage() {
@@ -63,7 +74,33 @@ export default function AdminDashboardPage() {
   const { data: candidates, isLoading: candidatesLoading } = useCollection<Candidate>('candidates');
   const { data: electionSettings, isLoading: settingsLoading } = useDoc<ElectionSettings>('settings/election');
   
-  const electionStatus = electionSettings?.status || "active";
+  const [startDate, setStartDate] = useState<Date | undefined>();
+  const [endDate, setEndDate] = useState<Date | undefined>();
+
+  useEffect(() => {
+    if (electionSettings) {
+        if (electionSettings.startDate) {
+            setStartDate(parseISO(electionSettings.startDate));
+        }
+        if (electionSettings.endDate) {
+            setEndDate(parseISO(electionSettings.endDate));
+        }
+    }
+  }, [electionSettings]);
+
+
+  const electionStatus = useMemo(() => {
+    if (!electionSettings) return "active";
+    if (electionSettings.status === 'ended') return 'ended';
+
+    const now = new Date();
+    const start = electionSettings.startDate ? parseISO(electionSettings.startDate) : null;
+    const end = electionSettings.endDate ? parseISO(electionSettings.endDate) : null;
+
+    if (end && now > end) return 'ended';
+    if (start && now < start) return 'pending';
+    return 'active';
+  }, [electionSettings]);
 
   const electionData = useMemo(() => {
     if (!votes || !candidates) return [];
@@ -83,12 +120,39 @@ export default function AdminDashboardPage() {
   
   const isLoading = votesLoading || candidatesLoading || settingsLoading;
 
+  const handleSetDates = async () => {
+    if (!db || !startDate || !endDate) {
+        toast({ variant: 'destructive', title: dict.admin.auth.errorTitle, description: "Please select both start and end dates."});
+        return;
+    };
+    if (startDate > endDate) {
+        toast({ variant: 'destructive', title: dict.admin.auth.errorTitle, description: "End date must be after start date."});
+        return;
+    }
+    
+    setIsUpdatingStatus(true);
+    const settingsRef = doc(db, 'settings', 'election');
+    try {
+        await updateDoc(settingsRef, { 
+            startDate: startDate.toISOString(),
+            endDate: endDate.toISOString(),
+        });
+        toast({ title: dict.appName, description: dict.admin.dashboard.updateDatesSuccess });
+    } catch (error) {
+        console.error("Error setting dates:", error);
+        toast({ variant: 'destructive', title: dict.admin.auth.errorTitle, description: dict.admin.dashboard.updateDatesError });
+    } finally {
+        setIsUpdatingStatus(false);
+    }
+  }
+
+
   const handleEndElection = async () => {
     if (!db) return;
     setIsUpdatingStatus(true);
     const settingsRef = doc(db, 'settings', 'election');
     try {
-        await setDoc(settingsRef, { status: 'ended' });
+        await setDoc(settingsRef, { status: 'ended' }, { merge: true });
         toast({ title: dict.appName, description: dict.admin.dashboard.endElectionSuccess });
     } catch (error) {
         console.error("Error ending election:", error);
@@ -113,12 +177,18 @@ export default function AdminDashboardPage() {
         const candidatesQuerySnapshot = await getDocs(collection(db, 'candidates'));
         candidatesQuerySnapshot.forEach(doc => batch.delete(doc.ref));
 
-        // Reset election status
+        // Reset election status and dates
         const settingsRef = doc(db, 'settings', 'election');
-        batch.set(settingsRef, { status: 'active' });
+        batch.set(settingsRef, { 
+            status: 'active',
+            startDate: null,
+            endDate: null,
+        });
 
         await batch.commit();
 
+        setStartDate(undefined);
+        setEndDate(undefined);
         toast({ title: dict.appName, description: dict.admin.dashboard.resetElectionSuccess });
 
     } catch (error) {
@@ -129,6 +199,19 @@ export default function AdminDashboardPage() {
     }
   }
 
+  const getStatusComponent = () => {
+      switch (electionStatus) {
+          case 'active':
+            return <p className="text-4xl font-bold text-green-600">{dict.admin.dashboard.statusActive}</p>
+          case 'ended':
+            return <p className="text-4xl font-bold text-destructive">{dict.admin.dashboard.statusEnded}</p>
+          case 'pending':
+            return <p className="text-4xl font-bold text-yellow-500">{dict.admin.dashboard.statusPending}</p>
+          default:
+            return <Skeleton className="h-10 w-1/2" />
+      }
+  }
+
   return (
     <div className="space-y-8">
       <Card>
@@ -137,7 +220,7 @@ export default function AdminDashboardPage() {
           <CardDescription>{dict.admin.dashboard.description}</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             <Card>
               <CardHeader>
                 <CardTitle>{dict.admin.dashboard.totalVotes}</CardTitle>
@@ -151,28 +234,19 @@ export default function AdminDashboardPage() {
                 <CardTitle>{dict.admin.dashboard.electionStatus}</CardTitle>
               </CardHeader>
               <CardContent>
-                 {isLoading ? <Skeleton className="h-10 w-1/2" /> :
-                    <p className={`text-4xl font-bold ${electionStatus === 'active' ? 'text-green-600' : 'text-destructive'}`}>
-                        {electionStatus === 'active' ? dict.admin.dashboard.statusActive : dict.admin.dashboard.statusEnded}
-                    </p>
-                 }
+                 {isLoading ? <Skeleton className="h-10 w-1/2" /> : getStatusComponent()}
               </CardContent>
             </Card>
-             <Card>
+             <Card className="md:col-span-2 lg:col-span-1">
               <CardHeader>
                 <CardTitle>{dict.admin.dashboard.controlsTitle}</CardTitle>
               </CardHeader>
-              <CardContent>
-                {isLoading ? <Skeleton className="h-10 w-full" /> : (
-                    electionStatus === 'active' ? (
-                        <Button onClick={handleEndElection} disabled={isUpdatingStatus} variant="destructive">
-                           {isUpdatingStatus && <Loader2 className="animate-spin" />} 
-                           {isUpdatingStatus ? dict.admin.dashboard.endingButton : dict.admin.dashboard.endElectionButton}
-                        </Button>
-                    ) : (
+              <CardContent className="space-y-4">
+                 <div className="flex flex-col sm:flex-row gap-2">
+                    {electionStatus === 'ended' ? (
                          <AlertDialog>
                             <AlertDialogTrigger asChild>
-                                 <Button disabled={isUpdatingStatus} variant="secondary">
+                                 <Button disabled={isUpdatingStatus} variant="secondary" className="w-full">
                                     {isUpdatingStatus && <Loader2 className="animate-spin" />} 
                                     {isUpdatingStatus ? dict.admin.dashboard.resettingButton : dict.admin.dashboard.resetElectionButton}
                                 </Button>
@@ -190,8 +264,64 @@ export default function AdminDashboardPage() {
                                 </AlertDialogFooter>
                             </AlertDialogContent>
                         </AlertDialog>
-                    )
-                )}
+                    ) : (
+                        <Button onClick={handleEndElection} disabled={isUpdatingStatus || electionStatus === 'ended'} variant="destructive" className="w-full">
+                           {isUpdatingStatus && <Loader2 className="animate-spin" />} 
+                           {dict.admin.dashboard.endElectionButton}
+                        </Button>
+                    )}
+                 </div>
+                 <p className="text-sm text-muted-foreground pt-4 border-t">{dict.admin.dashboard.scheduleTitle}</p>
+                  <div className="space-y-2">
+                    <Popover>
+                        <PopoverTrigger asChild>
+                            <Button
+                            variant={"outline"}
+                            className={cn(
+                                "w-full justify-start text-left font-normal",
+                                !startDate && "text-muted-foreground"
+                            )}
+                            >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {startDate ? format(startDate, "PPP") : <span>{dict.admin.dashboard.startDate}</span>}
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                            <Calendar
+                            mode="single"
+                            selected={startDate}
+                            onSelect={setStartDate}
+                            initialFocus
+                            />
+                        </PopoverContent>
+                    </Popover>
+                     <Popover>
+                        <PopoverTrigger asChild>
+                            <Button
+                            variant={"outline"}
+                            className={cn(
+                                "w-full justify-start text-left font-normal",
+                                !endDate && "text-muted-foreground"
+                            )}
+                            >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {endDate ? format(endDate, "PPP") : <span>{dict.admin.dashboard.endDate}</span>}
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                            <Calendar
+                            mode="single"
+                            selected={endDate}
+                            onSelect={setEndDate}
+                            initialFocus
+                            />
+                        </PopoverContent>
+                    </Popover>
+                    <Button onClick={handleSetDates} disabled={isUpdatingStatus || !startDate || !endDate} className="w-full">
+                        {isUpdatingStatus && <Loader2 className="animate-spin" />}
+                        {dict.admin.dashboard.setDatesButton}
+                    </Button>
+                  </div>
               </CardContent>
             </Card>
           </div>
@@ -231,3 +361,5 @@ export default function AdminDashboardPage() {
     </div>
   );
 }
+
+    

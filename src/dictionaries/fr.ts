@@ -65,6 +65,8 @@ export const fr: Dictionary = {
     noCandidatesMessage: "Aucun candidat n'a encore été ajouté.",
     electionEndedTitle: "L'Élection est Terminée",
     electionEndedDescription: "La période de vote est maintenant terminée. Merci de votre participation.",
+    electionPendingTitle: "L'élection n'a pas encore commencé",
+    electionPendingDescription: "La période de vote n'a pas encore commencé. Veuillez revenir plus tard.",
     viewResultsButton: "Voir les Résultats Finaux",
     votedLabel: "Voté",
   },
@@ -122,6 +124,7 @@ export const fr: Dictionary = {
         electionStatus: "Statut de l'Élection",
         statusActive: "Actif",
         statusEnded: "Terminé",
+        statusPending: "En attente",
         resultsTitle: "Résultats en Direct",
         votesLabel: "Votes",
         controlsTitle: "Contrôles de l'Élection",
@@ -137,6 +140,12 @@ export const fr: Dictionary = {
         resetConfirmDescription: "Cette action est irréversible. Cela supprimera définitivement tous les votes et candidats actuels, et lancera une nouvelle élection.",
         cancelButton: "Annuler",
         continueButton: "Continuer",
+        scheduleTitle: "Planifier l'élection",
+        startDate: "Date de début",
+        endDate: "Date de fin",
+        setDatesButton: "Définir les dates",
+        updateDatesSuccess: "Les dates de l'élection ont été mises à jour.",
+        updateDatesError: "Impossible de mettre à jour les dates de l'élection.",
     },
     groups: {
         title: "Groupes Électoraux Actuels",
@@ -212,3 +221,5 @@ export const fr: Dictionary = {
     analysisErrorDescription: "Une erreur est survenue lors de l'analyse des données.",
   }
 };
+
+    

@@ -63,6 +63,8 @@ export const en = {
     noCandidatesMessage: "No candidates have been added yet.",
     electionEndedTitle: "The Election Has Ended",
     electionEndedDescription: "The voting period is now closed. Thank you for your participation.",
+    electionPendingTitle: "Election Has Not Started",
+    electionPendingDescription: "The voting period has not yet begun. Please check back later.",
     viewResultsButton: "View Final Results",
     votedLabel: "Voted",
   },
@@ -120,10 +122,11 @@ export const en = {
         electionStatus: "Election Status",
         statusActive: "Active",
         statusEnded: "Ended",
+        statusPending: "Pending",
         resultsTitle: "Live Results",
         votesLabel: "Votes",
         controlsTitle: "Election Controls",
-        endElectionButton: "End Election",
+        endElectionButton: "End Election Now",
         resetElectionButton: "Reset Election",
         endingButton: "Ending...",
         resettingButton: "Resetting...",
@@ -135,6 +138,12 @@ export const en = {
         resetConfirmDescription: "This action cannot be undone. This will permanently delete all current votes and candidates, and start a new election.",
         cancelButton: "Cancel",
         continueButton: "Continue",
+        scheduleTitle: "Schedule Election",
+        startDate: "Start Date",
+        endDate: "End Date",
+        setDatesButton: "Set Dates",
+        updateDatesSuccess: "Election dates have been updated.",
+        updateDatesError: "Could not update election dates.",
     },
     groups: {
         title: "Current Election Groups",
@@ -210,3 +219,5 @@ export const en = {
     analysisErrorDescription: "An error occurred while analyzing the data.",
   }
 };
+
+    

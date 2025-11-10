@@ -20,6 +20,8 @@ import {
 } from "recharts";
 import { useCollection, useDoc } from "@/firebase";
 import { Skeleton } from "@/components/ui/skeleton";
+import { parseISO } from "date-fns";
+
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#AF19FF", "#FF8C00"];
 
@@ -35,6 +37,8 @@ interface Candidate {
 
 interface ElectionSettings {
     status: 'active' | 'ended';
+    startDate?: string;
+    endDate?: string;
 }
 
 export default function ElectionResultsPage() {
@@ -43,7 +47,17 @@ export default function ElectionResultsPage() {
   const { data: candidates, isLoading: candidatesLoading } = useCollection<Candidate>('candidates');
   const { data: electionSettings, isLoading: settingsLoading } = useDoc<ElectionSettings>('settings/election');
   
-  const electionStatus = electionSettings?.status || "active";
+  const electionStatus = useMemo(() => {
+    if (!electionSettings) return "active";
+    if (electionSettings.status === 'ended') return 'ended';
+    
+    const now = new Date();
+    const end = electionSettings.endDate ? parseISO(electionSettings.endDate) : null;
+    
+    if (end && now > end) return 'ended';
+    return 'active';
+  }, [electionSettings]);
+
 
   const electionData = useMemo(() => {
     if (!votes || !candidates) return [];
@@ -164,3 +178,5 @@ export default function ElectionResultsPage() {
     </div>
   );
 }
+
+    
