@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -113,7 +112,7 @@ export default function LoginPage() {
       toast({
         variant: "destructive",
         title: dict.login.loginErrorTitle,
-        description: result.error || dict.login.loginErrorDefault,
+        description: result.error ? dict.login[result.error as keyof typeof dict.login] : dict.login.loginErrorDefault,
       });
       setIsLoading(false);
     }
@@ -121,7 +120,7 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center p-4">
-      <Card className="w-full max-w-md shadow-2xl">
+      <Card className="w-full max-w-md shadow-2xl bg-card/80">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <CardHeader className="text-center">

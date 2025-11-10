@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -186,7 +185,7 @@ export default function VotePage() {
   if (electionStatus === 'ended' && !settingsLoading) {
     return (
         <div className="container mx-auto py-8 px-4">
-            <Card className="w-full max-w-4xl mx-auto shadow-2xl text-center">
+            <Card className="w-full max-w-4xl mx-auto shadow-2xl text-center bg-card/80">
                 <CardHeader>
                     <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10 mb-4">
                         <Ban className="h-8 w-8 text-destructive" />
@@ -210,7 +209,7 @@ export default function VotePage() {
 
   return (
     <div className="container mx-auto py-8 px-4">
-      <Card className="w-full max-w-4xl mx-auto shadow-2xl">
+      <Card className="w-full max-w-4xl mx-auto shadow-2xl bg-card/80">
         <CardHeader className="text-center">
           <CardTitle className="text-3xl font-bold font-headline text-primary">
             {dict.vote.title}

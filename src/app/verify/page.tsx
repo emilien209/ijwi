@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -67,7 +66,7 @@ export default function VerifyPage() {
 
   return (
     <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center p-4">
-      <Card className="w-full max-w-lg shadow-2xl">
+      <Card className="w-full max-w-lg shadow-2xl bg-card/80">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <CardHeader>
@@ -96,9 +95,9 @@ export default function VerifyPage() {
               />
 
               {verificationStatus.status === "success" && (
-                <Alert variant="default" className="bg-green-50 border-green-200">
+                <Alert variant="default" className="bg-green-50 border-green-200 text-green-800">
                   <CheckCircle className="h-4 w-4 text-green-600" />
-                  <AlertTitle className="text-green-800">{dict.verify.successTitle}</AlertTitle>
+                  <AlertTitle>{dict.verify.successTitle}</AlertTitle>
                   <AlertDescription className="text-green-700">
                     {dict.verify.successDescription}
                   </AlertDescription>

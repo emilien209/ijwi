@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useMemo } from "react";
@@ -74,7 +73,7 @@ export default function ElectionResultsPage() {
   if (isLoading) {
       return (
         <div className="container mx-auto py-8 px-4">
-             <Card className="w-full max-w-4xl mx-auto shadow-2xl">
+             <Card className="w-full max-w-4xl mx-auto shadow-2xl bg-card/80">
                 <CardHeader>
                     <Skeleton className="h-8 w-3/4 mb-2" />
                     <Skeleton className="h-6 w-1/2" />
@@ -90,7 +89,7 @@ export default function ElectionResultsPage() {
   if (electionStatus === 'active') {
       return (
         <div className="container mx-auto py-8 px-4">
-             <Card className="w-full max-w-4xl mx-auto shadow-2xl text-center">
+             <Card className="w-full max-w-4xl mx-auto shadow-2xl text-center bg-card/80">
                 <CardHeader>
                     <CardTitle className="text-3xl font-bold font-headline text-primary">
                         {dict.results.unavailableTitle}
@@ -108,7 +107,7 @@ export default function ElectionResultsPage() {
 
   return (
     <div className="container mx-auto py-8 px-4">
-      <Card className="w-full max-w-4xl mx-auto shadow-2xl">
+      <Card className="w-full max-w-4xl mx-auto shadow-2xl bg-card/80">
         <CardHeader>
           <CardTitle className="text-3xl font-bold font-headline text-primary">{dict.results.title}</CardTitle>
            <CardDescription className="text-lg">

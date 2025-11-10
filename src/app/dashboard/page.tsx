@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from "next/link";
@@ -30,7 +29,7 @@ export default function DashboardPage() {
         </p>
       </div>
 
-      <Card className="w-full max-w-4xl mx-auto overflow-hidden shadow-2xl">
+      <Card className="w-full max-w-4xl mx-auto overflow-hidden shadow-2xl bg-card/80">
         {electionImage && (
             <div className="relative h-48 w-full">
                  <Image

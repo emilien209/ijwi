@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Suspense } from "react";
@@ -28,7 +27,7 @@ function ConfirmationContent() {
   if (!receipt) {
     // Handle case where user lands here without a receipt
     return (
-      <Card className="w-full max-w-lg text-center shadow-2xl">
+      <Card className="w-full max-w-lg text-center shadow-2xl bg-card/80">
         <CardHeader>
           <CardTitle className="text-destructive">{dict.confirmation.errorTitle}</CardTitle>
           <CardDescription>{dict.confirmation.errorDescription}</CardDescription>
@@ -49,7 +48,7 @@ function ConfirmationContent() {
   };
 
   return (
-    <Card className="w-full max-w-lg text-center shadow-2xl">
+    <Card className="w-full max-w-lg text-center shadow-2xl bg-card/80">
       <CardHeader>
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100 mb-4">
           <CheckCircle className="h-8 w-8 text-green-600" />

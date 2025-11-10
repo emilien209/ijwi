@@ -5,6 +5,7 @@ import { MainLayout } from '@/components/main-layout';
 import './globals.css';
 import { LanguageProvider } from '@/contexts/language-context';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
+import { ThemeProvider } from '@/components/theme-provider';
 
 const ptSans = PT_Sans({
   subsets: ['latin'],
@@ -25,12 +26,19 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`font-body antialiased ${ptSans.variable}`}>
-        <FirebaseClientProvider>
-            <LanguageProvider>
-              <MainLayout>{children}</MainLayout>
-            </LanguageProvider>
-        </FirebaseClientProvider>
-        <Toaster />
+        <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+        >
+            <FirebaseClientProvider>
+                <LanguageProvider>
+                <MainLayout>{children}</MainLayout>
+                </LanguageProvider>
+            </FirebaseClientProvider>
+            <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   );
