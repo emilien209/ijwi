@@ -13,12 +13,13 @@ import { Input } from "@/components/ui/input";
 import { Search, History as HistoryIcon } from "lucide-react";
 import { useDictionary } from "@/hooks/use-dictionary";
 
-// Mock data for demonstration. In a real app, this would come from a database.
 const electionHistory = [
-    { id: 1, name: "Presidential Election 2024", date: "2024-11-05", totalVotes: 125890, winner: "Candidate A" },
-    { id: 2, name: "Parliamentary Election 2022", date: "2022-05-20", totalVotes: 890543, winner: "Party X" },
-    { id: 3, name: "Local Council Election 2021", date: "2021-08-15", totalVotes: 34567, winner: "Candidate C" },
+    { id: 1, name: "Presidential Election 2017", date: "2017-08-04", totalVotes: 6897072, winner: "Paul Kagame" },
+    { id: 2, name: "Parliamentary Election 2018", date: "2018-09-03", totalVotes: 7195431, winner: "RPF Coalition" },
+    { id: 3, name: "Presidential Election 2010", date: "2010-08-09", totalVotes: 5129994, winner: "Paul Kagame" },
+    { id: 4, name: "Parliamentary Election 2013", date: "2013-09-18", totalVotes: 5881404, winner: "RPF Coalition" },
 ];
+
 
 export default function ElectionHistoryPage() {
   const [searchTerm, setSearchTerm] = useState("");
