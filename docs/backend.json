@@ -50,6 +50,19 @@
         }
       },
       "required": ["nationalId", "candidateId", "groupId", "votedAt"]
+    },
+    "electionSetting": {
+      "title": "Election Setting",
+      "description": "Settings to control the state of an election.",
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["active", "ended"],
+          "description": "The current status of the election."
+        }
+      },
+      "required": ["status"]
     }
   },
   "auth": {
@@ -63,8 +76,10 @@
     "/votes/{voteId}": {
       "schema": { "$ref": "#/entities/vote" },
       "description": "Collection where each document represents a single vote. Document ID is a composite of nationalId and a static groupId."
+    },
+    "/settings/{settingId}": {
+      "schema": { "$ref": "#/entities/electionSetting" },
+      "description": "Collection for application-wide settings. E.g., 'election' doc for status."
     }
   }
 }
-
-    

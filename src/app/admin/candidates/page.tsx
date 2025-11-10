@@ -245,10 +245,10 @@ export default function CandidatesPage() {
                     name="description"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>{dict.admin.groups.descriptionLabel}</FormLabel>
+                        <FormLabel>{dict.admin.candidates.descriptionLabel}</FormLabel>
                         <FormControl>
                           <Textarea
-                            placeholder={dict.admin.groups.descriptionPlaceholder}
+                            placeholder={dict.admin.candidates.descriptionPlaceholder}
                             {...field} 
                           />
                         </FormControl>
@@ -348,5 +348,3 @@ export default function CandidatesPage() {
     </div>
   );
 }
-
-    

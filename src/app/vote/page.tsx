@@ -129,7 +129,7 @@ export default function VotePage() {
       })
       .catch((serverError) => {
         setIsLoading(false);
-        // Do not close the dialog on error
+        setIsDialogOpen(false);
         toast({
           variant: "destructive",
           title: dict.vote.errorToastTitle,
@@ -312,5 +312,3 @@ export default function VotePage() {
     </div>
   );
 }
-
-    

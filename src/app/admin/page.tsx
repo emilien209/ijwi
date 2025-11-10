@@ -112,10 +112,6 @@ export default function AdminDashboardPage() {
         // Delete all candidates
         const candidatesQuerySnapshot = await getDocs(collection(db, 'candidates'));
         candidatesQuerySnapshot.forEach(doc => batch.delete(doc.ref));
-        
-        // Delete all groups
-        const groupsQuerySnapshot = await getDocs(collection(db, 'groups'));
-        groupsQuerySnapshot.forEach(doc => batch.delete(doc.ref));
 
         // Reset election status
         const settingsRef = doc(db, 'settings', 'election');
