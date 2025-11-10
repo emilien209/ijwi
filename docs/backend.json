@@ -10,33 +10,17 @@
           "type": "string",
           "description": "The full name of the candidate."
         },
+        "description": {
+          "type": "string",
+          "description": "A short description of the candidate."
+        },
         "imageUrl": {
           "type": "string",
           "format": "uri",
           "description": "A URL pointing to a photo of the candidate."
-        },
-        "groupId": {
-            "type": "string",
-            "description": "The ID of the group this candidate belongs to."
         }
       },
-      "required": ["name", "imageUrl", "groupId"]
-    },
-    "group": {
-        "title": "Group",
-        "description": "A group of candidates for a specific election or position.",
-        "type": "object",
-        "properties": {
-            "name": {
-                "type": "string",
-                "description": "The name of the election group."
-            },
-            "description": {
-                "type": "string",
-                "description": "A short description of the election group."
-            }
-        },
-        "required": ["name"]
+      "required": ["name", "imageUrl", "description"]
     },
     "vote": {
       "title": "Vote",
@@ -57,7 +41,7 @@
         },
         "groupId": {
             "type": "string",
-            "description": "The ID of the group in which the vote was cast."
+            "description": "A static ID for the election."
         },
         "votedAt": {
           "type": "string",
@@ -72,17 +56,15 @@
     "providers": []
   },
   "firestore": {
-    "/groups/{groupId}": {
-        "schema": { "$ref": "#/entities/group" },
-        "description": "Collection of all election groups."
-    },
     "/candidates/{candidateId}": {
       "schema": { "$ref": "#/entities/candidate" },
-      "description": "Collection of all election candidates across all groups."
+      "description": "Collection of all election candidates."
     },
     "/votes/{voteId}": {
       "schema": { "$ref": "#/entities/vote" },
-      "description": "Collection where each document represents a single vote. Document ID is a composite of nationalId and groupId."
+      "description": "Collection where each document represents a single vote. Document ID is a composite of nationalId and a static groupId."
     }
   }
 }
+
+    

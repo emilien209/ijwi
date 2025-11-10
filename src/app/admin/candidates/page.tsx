@@ -13,6 +13,7 @@ import {
   CardHeader,
   CardTitle,
   CardFooter,
+  CardDescription,
 } from "@/components/ui/card";
 import {
   Form,
@@ -32,18 +33,11 @@ import { collection, addDoc, deleteDoc, doc } from "firebase/firestore";
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError } from "@/firebase/errors";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-
+import { Textarea } from "@/components/ui/textarea";
 
 const formSchema = z.object({
   name: z.string().min(2, "Name is required."),
-  groupId: z.string().min(1, "Group is required."),
+  description: z.string().min(10, "A short description is required."),
   imageUrl: z.string().optional(),
   uploadedImage: z.any().optional(),
 }).refine(data => data.imageUrl || data.uploadedImage, {
@@ -51,8 +45,7 @@ const formSchema = z.object({
     path: ["imageUrl"],
 });
 
-type Candidate = { id: string, name: string, imageUrl: string, groupId: string };
-type Group = { id: string, name: string };
+type Candidate = { id: string, name: string, description: string, imageUrl: string };
 
 export default function CandidatesPage() {
   const { dict } = useDictionary();
@@ -62,26 +55,15 @@ export default function CandidatesPage() {
   const db = useFirestore();
 
   const { data: candidates, isLoading: candidatesLoading } = useCollection<Candidate>('candidates');
-  const { data: groups, isLoading: groupsLoading } = useCollection<Group>('groups');
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
-      groupId: "",
+      description: "",
       imageUrl: "",
     },
   });
-
-  const candidatesByGroup = useMemo(() => {
-    if (!candidates || !groups) return [];
-    
-    return groups.map(group => ({
-      ...group,
-      candidates: candidates.filter(c => c.groupId === group.id)
-    }));
-
-  }, [candidates, groups]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -112,7 +94,7 @@ export default function CandidatesPage() {
 
     const newCandidate = {
         name: values.name,
-        groupId: values.groupId,
+        description: values.description,
         imageUrl: imageUrl,
     };
 
@@ -167,59 +149,60 @@ export default function CandidatesPage() {
             <CardHeader>
               <CardTitle>{dict.admin.candidates.title}</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
-              {candidatesLoading || groupsLoading ? (
+            <CardContent>
+              {candidatesLoading ? (
                  <div className="space-y-4">
-                    <Skeleton className="h-8 w-1/4" />
-                    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                        {[...Array(3)].map((_, i) => (
+                    <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-2">
+                        {[...Array(2)].map((_, i) => (
                             <Card key={i} className="overflow-hidden">
-                                <Skeleton className="h-40 w-full" />
-                                <CardHeader className="p-4">
-                                    <Skeleton className="h-6 w-3/4" />
-                                </CardHeader>
-                                <CardFooter className="p-4 pt-0">
-                                    <Skeleton className="h-9 w-full" />
-                                </CardFooter>
+                                <div className="flex items-start p-4 gap-4">
+                                    <Skeleton className="h-24 w-24 rounded-full" />
+                                    <div className="space-y-2 flex-1">
+                                        <Skeleton className="h-6 w-3/4" />
+                                        <Skeleton className="h-4 w-full" />
+                                        <Skeleton className="h-4 w-5/6" />
+                                        <Skeleton className="h-9 w-full mt-2" />
+                                    </div>
+                                </div>
                             </Card>
                         ))}
                     </div>
                  </div>
-              ) : candidatesByGroup && candidatesByGroup.length > 0 ? (
-                candidatesByGroup.map(group => group.candidates.length > 0 && (
-                  <div key={group.id}>
-                    <h3 className="text-xl font-semibold mb-4">{group.name}</h3>
-                    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                      {group.candidates.map((candidate) => (
-                        <Card key={candidate.id} className="overflow-hidden">
-                          <div className="relative h-40 w-full bg-muted">
-                            <Image 
+              ) : candidates && candidates.length > 0 ? (
+                <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-2">
+                  {candidates.map((candidate) => (
+                    <Card key={candidate.id} className="overflow-hidden flex flex-col">
+                      <CardContent className="p-6 flex items-start gap-6">
+                        <div className="relative h-24 w-24 rounded-full overflow-hidden flex-shrink-0">
+                           <Image 
                               src={candidate.imageUrl}
                               alt={`Portrait of ${candidate.name}`}
                               fill
                               className="object-cover"
-                              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                              sizes="96px"
                             />
-                          </div>
-                          <CardHeader className="p-4">
-                            <CardTitle className="text-lg">{candidate.name}</CardTitle>
-                          </CardHeader>
-                          <CardFooter className="p-4 pt-0">
-                            <Button 
-                              variant="destructive" 
-                              size="sm" 
-                              className="w-full" 
-                              onClick={() => removeCandidate(candidate)}
-                            >
-                              <Trash2 className="mr-2 h-4 w-4" /> 
-                              {dict.admin.candidates.removeButton}
-                            </Button>
-                          </CardFooter>
-                        </Card>
-                      ))}
-                    </div>
-                  </div>
-                ))
+                        </div>
+                        <div className="flex-1">
+                            <CardTitle className="text-xl">{candidate.name}</CardTitle>
+                            <CardDescription className="mt-2 text-sm">
+                                {candidate.description}
+                            </CardDescription>
+                        </div>
+                      </CardContent>
+                      <CardFooter className="p-6 pt-0 mt-auto">
+                        <Button 
+                          variant="destructive" 
+                          size="sm" 
+                          className="w-full" 
+                          onClick={() => removeCandidate(candidate)}
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" /> 
+                          {dict.admin.candidates.removeButton}
+                        </Button>
+                      </CardFooter>
+                    </Card>
+                  ))}
+                </div>
               ) : (
                 <div className="text-center py-10 border-2 border-dashed rounded-lg">
                   <User className="mx-auto h-12 w-12 text-muted-foreground" />
@@ -241,29 +224,6 @@ export default function CandidatesPage() {
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                   <FormField
-                      control={form.control}
-                      name="groupId"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>{dict.admin.candidates.groupLabel}</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value} disabled={groupsLoading}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder={dict.admin.candidates.groupPlaceholder} />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {groups?.map(group => (
-                                <SelectItem key={group.id} value={group.id}>{group.name}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                  <FormField
                     control={form.control}
                     name="name"
                     render={({ field }) => (
@@ -272,6 +232,23 @@ export default function CandidatesPage() {
                         <FormControl>
                           <Input 
                             placeholder={dict.admin.candidates.namePlaceholder} 
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{dict.admin.groups.descriptionLabel}</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder={dict.admin.groups.descriptionPlaceholder}
                             {...field} 
                           />
                         </FormControl>
@@ -371,3 +348,5 @@ export default function CandidatesPage() {
     </div>
   );
 }
+
+    

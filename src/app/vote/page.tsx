@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -25,18 +26,12 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useDictionary } from "@/hooks/use-dictionary";
-import { Loader2, Vote as VoteIcon, ChevronDown, Check, Ban, AlertCircle } from "lucide-react";
+import { Loader2, Vote as VoteIcon, Ban } from "lucide-react";
 import { useFirestore, useCollection, useDoc } from "@/firebase";
 import { doc, setDoc, serverTimestamp, getDoc } from "firebase/firestore";
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError } from "@/firebase/errors";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import { cn } from "@/lib/utils";
 import Link from "next/link";
 
 
@@ -44,13 +39,7 @@ interface Candidate {
   id: string;
   name: string;
   imageUrl: string;
-  groupId: string;
-}
-
-interface ElectionGroup {
-    id: string;
-    name: string;
-    description?: string;
+  description: string;
 }
 
 interface ElectionSettings {
@@ -61,8 +50,7 @@ export default function VotePage() {
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [openGroup, setOpenGroup] = useState<string | null>(null);
-  const [votedGroups, setVotedGroups] = useState<string[]>([]);
+  const [hasVoted, setHasVoted] = useState(false);
   const [nationalId, setNationalId] = useState<string | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
 
@@ -72,10 +60,10 @@ export default function VotePage() {
   const db = useFirestore();
 
   const { data: candidates, isLoading: candidatesLoading } = useCollection<Candidate>("candidates");
-  const { data: groups, isLoading: groupsLoading } = useCollection<ElectionGroup>("groups");
   const { data: electionSettings, isLoading: settingsLoading } = useDoc<ElectionSettings>('settings/election');
   
   const electionStatus = electionSettings?.status || "active";
+  const GROUP_ID = "presidential_2024"; // Static group ID since groups are removed
 
   useEffect(() => {
     const id = sessionStorage.getItem('nationalId');
@@ -94,22 +82,18 @@ export default function VotePage() {
 
 
   useEffect(() => {
-    if (!nationalId || !db || !groups) return;
+    if (!nationalId || !db) return;
 
-    const fetchVotedGroups = async () => {
-        const voted: string[] = [];
-        for (const group of groups) {
-            const voteRef = doc(db, 'votes', `${nationalId}_${group.id}`);
-            const voteSnap = await getDoc(voteRef);
-            if (voteSnap.exists()) {
-                voted.push(group.id);
-            }
+    const fetchVoteStatus = async () => {
+        const voteRef = doc(db, 'votes', `${nationalId}_${GROUP_ID}`);
+        const voteSnap = await getDoc(voteRef);
+        if (voteSnap.exists()) {
+            setHasVoted(true);
         }
-        setVotedGroups(voted);
     };
 
-    fetchVotedGroups();
-  }, [nationalId, db, groups]);
+    fetchVoteStatus();
+  }, [nationalId, db]);
 
 
   const handleVoteSubmit = () => {
@@ -128,15 +112,15 @@ export default function VotePage() {
         nationalId: nationalId,
         candidateId: selectedCandidate.id,
         candidateName: selectedCandidate.name,
-        groupId: selectedCandidate.groupId,
+        groupId: GROUP_ID,
         votedAt: serverTimestamp(),
     };
 
-    const voteRef = doc(db, 'votes', `${nationalId}_${selectedCandidate.groupId}`);
+    const voteRef = doc(db, 'votes', `${nationalId}_${GROUP_ID}`);
 
     setDoc(voteRef, voteData)
       .then(() => {
-        const receipt = `receipt-${nationalId}-${selectedCandidate.groupId}-${Date.now()}`;
+        const receipt = `receipt-${nationalId}-${GROUP_ID}-${Date.now()}`;
         toast({
           title: dict.vote.successToastTitle,
           description: dict.vote.successToastDescription,
@@ -161,7 +145,7 @@ export default function VotePage() {
   };
   
   const handleSelectCandidate = (candidate: Candidate) => {
-    if (votedGroups.includes(candidate.groupId)) {
+    if (hasVoted) {
         toast({
             variant: "default",
             title: dict.vote.alreadyVotedToastTitle,
@@ -172,7 +156,7 @@ export default function VotePage() {
     setSelectedCandidate(candidate);
   }
   
-  const isLoadingAnything = candidatesLoading || groupsLoading || settingsLoading || !authChecked;
+  const isLoadingAnything = candidatesLoading || settingsLoading || !authChecked;
 
   if (isLoadingAnything && !authChecked) {
       return (
@@ -180,6 +164,31 @@ export default function VotePage() {
               <Loader2 className="animate-spin h-8 w-8" />
           </div>
       )
+  }
+  
+  if (hasVoted && !isLoadingAnything) {
+    return (
+        <div className="container mx-auto py-8 px-4">
+             <Card className="w-full max-w-4xl mx-auto shadow-2xl text-center bg-card/80">
+                <CardHeader>
+                     <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100 mb-4">
+                        <VoteIcon className="h-8 w-8 text-green-600" />
+                    </div>
+                    <CardTitle className="text-3xl font-bold font-headline text-primary">
+                        {dict.vote.alreadyVotedToastTitle}
+                    </CardTitle>
+                    <CardDescription className="text-lg">
+                        {dict.vote.alreadyVotedToastDescription}
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Link href="/results">
+                        <Button variant="outline">{dict.vote.viewResultsButton}</Button>
+                    </Link>
+                </CardContent>
+             </Card>
+        </div>
+    )
   }
 
   if (electionStatus === 'ended' && !settingsLoading) {
@@ -221,91 +230,50 @@ export default function VotePage() {
         <CardContent>
           {isLoadingAnything ? (
             <div className="space-y-4">
-                {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-20 w-full" />)}
+                {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-24 w-full rounded-lg" />)}
             </div>
           ) : (
-            <div className="space-y-4">
-                {groups?.map(group => {
-                    const groupCandidates = candidates?.filter(c => c.groupId === group.id) || [];
-                    const hasVotedInGroup = votedGroups.includes(group.id);
-
-                    if (groupCandidates.length === 0) {
-                      return (
-                         <div key={group.id} className="flex flex-col justify-between items-center w-full p-4 rounded-lg border-2 bg-muted/30">
-                            <div className="text-left w-full mb-4">
-                                <h3 className="text-lg font-semibold">{group.name}</h3>
-                                <p className="text-sm text-muted-foreground">{group.description}</p>
-                            </div>
-                            <div className="flex items-center gap-2 text-muted-foreground text-sm p-4 border-2 border-dashed rounded-lg w-full justify-center">
-                              <AlertCircle className="h-5 w-5" />
-                              <span>{dict.vote.noCandidatesMessage}</span>
-                            </div>
-                        </div>
-                      )
-                    }
-
-                    return (
-                        <Collapsible key={group.id} open={openGroup === group.id} onOpenChange={() => setOpenGroup(openGroup === group.id ? null : group.id)}>
-                            <CollapsibleTrigger asChild>
-                                <div className="flex justify-between items-center w-full p-4 rounded-lg border-2 cursor-pointer bg-muted/50 hover:border-primary">
-                                    <div className="text-left">
-                                        <h3 className="text-lg font-semibold">{group.name}</h3>
-                                        <p className="text-sm text-muted-foreground">{group.description}</p>
-                                    </div>
-                                    {hasVotedInGroup ? (
-                                        <div className="flex items-center gap-2 text-green-600">
-                                            <Check className="h-5 w-5" />
-                                            <span>{dict.vote.votedLabel}</span>
-                                        </div>
-                                    ) : (
-                                        <ChevronDown className={cn("h-6 w-6 transition-transform", openGroup === group.id && "rotate-180")} />
-                                    )}
-                                </div>
-                            </CollapsibleTrigger>
-                            <CollapsibleContent className="py-4 px-2">
-                                <RadioGroup
-                                    value={selectedCandidate?.id ?? undefined}
-                                    onValueChange={(candidateId) => {
-                                        const cand = groupCandidates.find(c => c.id === candidateId);
-                                        if (cand) handleSelectCandidate(cand);
-                                    }}
-                                    className="space-y-4"
-                                >
-                                    {groupCandidates.map((candidate) => (
-                                    <Label
-                                        key={candidate.id}
-                                        htmlFor={`candidate-${candidate.id}`}
-                                        className={`flex items-center gap-4 rounded-lg border-2 p-4 transition-all hover:border-primary ${hasVotedInGroup ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'} ${
-                                        selectedCandidate?.id === candidate.id
-                                            ? "border-primary bg-primary/5 ring-2 ring-primary"
-                                            : "border-border"
-                                        }`}
-                                    >
-                                        <RadioGroupItem value={candidate.id} id={`candidate-${candidate.id}`} disabled={hasVotedInGroup}/>
-                                        <div className="relative h-16 w-16 rounded-full overflow-hidden">
-                                            <Image
-                                                src={candidate.imageUrl}
-                                                alt={`Portrait of ${candidate.name}`}
-                                                fill
-                                                className="object-cover"
-                                                sizes="64px"
-                                            />
-                                        </div>
-                                        <span className="text-xl font-semibold">{candidate.name}</span>
-                                    </Label>
-                                    ))}
-                                </RadioGroup>
-                            </CollapsibleContent>
-                        </Collapsible>
-                    )
-                })}
-            </div>
+             <RadioGroup
+                value={selectedCandidate?.id ?? undefined}
+                onValueChange={(candidateId) => {
+                    const cand = candidates?.find(c => c.id === candidateId);
+                    if (cand) handleSelectCandidate(cand);
+                }}
+                className="grid grid-cols-1 md:grid-cols-2 gap-6"
+            >
+                {candidates?.map((candidate) => (
+                <Label
+                    key={candidate.id}
+                    htmlFor={`candidate-${candidate.id}`}
+                    className={`flex flex-col text-center items-center gap-4 rounded-lg border-2 p-6 transition-all hover:border-primary ${hasVoted ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'} ${
+                    selectedCandidate?.id === candidate.id
+                        ? "border-primary bg-primary/5 ring-2 ring-primary"
+                        : "border-border"
+                    }`}
+                >
+                    <div className="relative h-32 w-32 rounded-full overflow-hidden">
+                        <Image
+                            src={candidate.imageUrl}
+                            alt={`Portrait of ${candidate.name}`}
+                            fill
+                            className="object-cover"
+                            sizes="128px"
+                        />
+                    </div>
+                    <div className="flex-1">
+                        <h3 className="text-2xl font-bold">{candidate.name}</h3>
+                        <p className="text-sm text-muted-foreground mt-2">{candidate.description}</p>
+                    </div>
+                    <RadioGroupItem value={candidate.id} id={`candidate-${candidate.id}`} disabled={hasVoted} className="h-5 w-5 mt-4"/>
+                </Label>
+                ))}
+            </RadioGroup>
           )}
 
           <div className="mt-8 text-center">
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
-                <Button size="lg" disabled={!selectedCandidate || isLoadingAnything || (selectedCandidate && votedGroups.includes(selectedCandidate.groupId))} className="bg-accent text-accent-foreground hover:bg-accent/90">
+                <Button size="lg" disabled={!selectedCandidate || isLoadingAnything || hasVoted} className="bg-accent text-accent-foreground hover:bg-accent/90">
                   <VoteIcon className="mr-2 h-5 w-5" />
                   {dict.vote.previewButton}
                 </Button>
@@ -344,3 +312,5 @@ export default function VotePage() {
     </div>
   );
 }
+
+    
