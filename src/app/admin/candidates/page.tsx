@@ -23,13 +23,20 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useDictionary } from "@/hooks/use-dictionary";
-import { PlusCircle, Trash2, User, Upload } from "lucide-react";
+import { PlusCircle, Trash2, User, Upload, Layers } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useFirestore, useCollection } from "@/firebase";
-import { collection, addDoc, deleteDoc, doc } from "firebase/firestore";
+import { collection, addDoc, deleteDoc, doc, query, where } from "firebase/firestore";
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError } from "@/firebase/errors";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -45,16 +52,28 @@ const formSchema = z.object({
     path: ["imageUrl"],
 });
 
-type Candidate = { id: string, name: string, description: string, imageUrl: string };
+type Candidate = { id: string, name: string, description: string, imageUrl: string, groupId: string };
+type Group = { id: string, name: string };
 
 export default function CandidatesPage() {
   const { dict } = useDictionary();
   const { toast } = useToast();
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const db = useFirestore();
 
-  const { data: candidates, isLoading: candidatesLoading } = useCollection<Candidate>('candidates');
+  const { data: groups, isLoading: groupsLoading } = useCollection<Group>('groups');
+  
+  const candidatesQuery = useMemo(() => {
+    if (!db || !selectedGroup) return null;
+    return query(collection(db, "candidates"), where("groupId", "==", selectedGroup));
+  }, [db, selectedGroup]);
+
+  const { data: candidates, isLoading: candidatesLoading } = useCollection<Candidate>(
+      candidatesQuery ? `candidates-for-${selectedGroup}` : null,
+      candidatesQuery ?? undefined
+  );
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -93,8 +112,16 @@ export default function CandidatesPage() {
 
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    const imageUrl = values.imageUrl || previewImage;
+    if (!selectedGroup) {
+        toast({
+            variant: "destructive",
+            title: dict.appName,
+            description: "Please select a group first.",
+        });
+        return;
+    }
 
+    const imageUrl = values.imageUrl || previewImage;
     if (!imageUrl) {
         toast({
             variant: "destructive",
@@ -108,6 +135,7 @@ export default function CandidatesPage() {
         name: values.name,
         description: values.description,
         imageUrl: imageUrl,
+        groupId: selectedGroup,
     };
 
     const candidatesCol = collection(db, 'candidates');
@@ -153,6 +181,90 @@ export default function CandidatesPage() {
         });
   };
 
+  const renderCandidateList = () => {
+    if (!selectedGroup) {
+      return (
+        <div className="text-center py-10 border-2 border-dashed rounded-lg">
+          <Layers className="mx-auto h-12 w-12 text-muted-foreground" />
+          <p className="mt-4 text-muted-foreground">
+            {dict.admin.candidates.noGroupSelected}
+          </p>
+        </div>
+      );
+    }
+
+    if (candidatesLoading) {
+      return (
+        <div className="space-y-4">
+          <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-2">
+            {[...Array(2)].map((_, i) => (
+              <Card key={i} className="overflow-hidden">
+                <div className="flex items-start p-4 gap-4">
+                  <Skeleton className="h-24 w-24 rounded-full" />
+                  <div className="space-y-2 flex-1">
+                    <Skeleton className="h-6 w-3/4" />
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-5/6" />
+                    <Skeleton className="h-9 w-full mt-2" />
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </div>
+      );
+    }
+    
+    if (candidates && candidates.length > 0) {
+      return (
+        <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-2">
+          {candidates.map((candidate) => (
+            <Card key={candidate.id} className="overflow-hidden flex flex-col">
+              <CardContent className="p-6 flex items-start gap-6">
+                <div className="relative h-24 w-24 rounded-full overflow-hidden flex-shrink-0">
+                   <Image 
+                      src={candidate.imageUrl}
+                      alt={`Portrait of ${candidate.name}`}
+                      fill
+                      className="object-cover"
+                      sizes="96px"
+                    />
+                </div>
+                <div className="flex-1">
+                    <CardTitle className="text-xl">{candidate.name}</CardTitle>
+                    <CardDescription className="mt-2 text-sm">
+                        {candidate.description}
+                    </CardDescription>
+                </div>
+              </CardContent>
+              <CardFooter className="p-6 pt-0 mt-auto">
+                <Button 
+                  variant="destructive" 
+                  size="sm" 
+                  className="w-full" 
+                  onClick={() => removeCandidate(candidate)}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" /> 
+                  {dict.admin.candidates.removeButton}
+                </Button>
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
+      );
+    }
+    
+    return (
+        <div className="text-center py-10 border-2 border-dashed rounded-lg">
+          <User className="mx-auto h-12 w-12 text-muted-foreground" />
+          <p className="mt-4 text-muted-foreground">
+            {dict.admin.candidates.noCandidates}
+          </p>
+        </div>
+    );
+  };
+
+
   return (
     <div className="container mx-auto p-6">
       <div className="grid gap-8 lg:grid-cols-3">
@@ -160,69 +272,28 @@ export default function CandidatesPage() {
           <Card>
             <CardHeader>
               <CardTitle>{dict.admin.candidates.title}</CardTitle>
+               <div className="pt-2">
+                <Label>{dict.admin.candidates.groupSelectLabel}</Label>
+                <Select onValueChange={setSelectedGroup} value={selectedGroup || ''}>
+                    <SelectTrigger>
+                        <SelectValue placeholder={dict.admin.candidates.groupSelectPlaceholder} />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {groupsLoading ? (
+                            <SelectItem value="loading" disabled>Loading...</SelectItem>
+                        ) : (
+                            groups?.map(group => (
+                                <SelectItem key={group.id} value={group.id}>
+                                    {group.name}
+                                </SelectItem>
+                            ))
+                        )}
+                    </SelectContent>
+                </Select>
+               </div>
             </CardHeader>
             <CardContent>
-              {candidatesLoading ? (
-                 <div className="space-y-4">
-                    <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-2">
-                        {[...Array(2)].map((_, i) => (
-                            <Card key={i} className="overflow-hidden">
-                                <div className="flex items-start p-4 gap-4">
-                                    <Skeleton className="h-24 w-24 rounded-full" />
-                                    <div className="space-y-2 flex-1">
-                                        <Skeleton className="h-6 w-3/4" />
-                                        <Skeleton className="h-4 w-full" />
-                                        <Skeleton className="h-4 w-5/6" />
-                                        <Skeleton className="h-9 w-full mt-2" />
-                                    </div>
-                                </div>
-                            </Card>
-                        ))}
-                    </div>
-                 </div>
-              ) : candidates && candidates.length > 0 ? (
-                <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-2">
-                  {candidates.map((candidate) => (
-                    <Card key={candidate.id} className="overflow-hidden flex flex-col">
-                      <CardContent className="p-6 flex items-start gap-6">
-                        <div className="relative h-24 w-24 rounded-full overflow-hidden flex-shrink-0">
-                           <Image 
-                              src={candidate.imageUrl}
-                              alt={`Portrait of ${candidate.name}`}
-                              fill
-                              className="object-cover"
-                              sizes="96px"
-                            />
-                        </div>
-                        <div className="flex-1">
-                            <CardTitle className="text-xl">{candidate.name}</CardTitle>
-                            <CardDescription className="mt-2 text-sm">
-                                {candidate.description}
-                            </CardDescription>
-                        </div>
-                      </CardContent>
-                      <CardFooter className="p-6 pt-0 mt-auto">
-                        <Button 
-                          variant="destructive" 
-                          size="sm" 
-                          className="w-full" 
-                          onClick={() => removeCandidate(candidate)}
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" /> 
-                          {dict.admin.candidates.removeButton}
-                        </Button>
-                      </CardFooter>
-                    </Card>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-10 border-2 border-dashed rounded-lg">
-                  <User className="mx-auto h-12 w-12 text-muted-foreground" />
-                  <p className="mt-4 text-muted-foreground">
-                    {dict.admin.candidates.noCandidates}
-                  </p>
-                </div>
-              )}
+              {renderCandidateList()}
             </CardContent>
           </Card>
         </div>
@@ -245,6 +316,7 @@ export default function CandidatesPage() {
                           <Input 
                             placeholder={dict.admin.candidates.namePlaceholder} 
                             {...field} 
+                            disabled={!selectedGroup}
                           />
                         </FormControl>
                         <FormMessage />
@@ -261,7 +333,8 @@ export default function CandidatesPage() {
                         <FormControl>
                           <Textarea
                             placeholder={dict.admin.candidates.descriptionPlaceholder}
-                            {...field} 
+                            {...field}
+                            disabled={!selectedGroup}
                           />
                         </FormControl>
                         <FormMessage />
@@ -271,8 +344,8 @@ export default function CandidatesPage() {
 
                   <Tabs defaultValue="url" className="w-full">
                     <TabsList className="grid w-full grid-cols-2">
-                      <TabsTrigger value="url">{dict.admin.candidates.tabUrl}</TabsTrigger>
-                      <TabsTrigger value="upload">{dict.admin.candidates.tabUpload}</TabsTrigger>
+                      <TabsTrigger value="url" disabled={!selectedGroup}>{dict.admin.candidates.tabUrl}</TabsTrigger>
+                      <TabsTrigger value="upload" disabled={!selectedGroup}>{dict.admin.candidates.tabUpload}</TabsTrigger>
                     </TabsList>
                     
                     <TabsContent value="url" className="pt-4">
@@ -287,6 +360,7 @@ export default function CandidatesPage() {
                                 placeholder={dict.admin.candidates.photoUrlPlaceholder}
                                 {...field}
                                 onChange={handleUrlChange}
+                                disabled={!selectedGroup}
                               />
                             </FormControl>
                             <FormMessage />
@@ -304,7 +378,7 @@ export default function CandidatesPage() {
                             <FormLabel>{dict.admin.candidates.uploadLabel}</FormLabel>
                             <FormControl>
                               <div className="flex items-center justify-center w-full">
-                                <label htmlFor="dropzone-file" className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-muted hover:bg-muted/80">
+                                <label htmlFor="dropzone-file" className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg bg-muted ${!selectedGroup ? 'cursor-not-allowed' : 'cursor-pointer hover:bg-muted/80'}`}>
                                   <div className="flex flex-col items-center justify-center pt-5 pb-6">
                                     <Upload className="w-8 h-8 mb-2 text-muted-foreground"/>
                                     <p className="mb-2 text-sm text-center text-muted-foreground">
@@ -319,6 +393,7 @@ export default function CandidatesPage() {
                                     onChange={handleFileChange} 
                                     accept="image/png, image/jpeg, image/gif" 
                                     ref={fileInputRef}
+                                    disabled={!selectedGroup}
                                   />
                                 </label>
                               </div> 
@@ -342,7 +417,7 @@ export default function CandidatesPage() {
                     </div>
                   )}
 
-                  <Button type="submit" className="w-full">
+                  <Button type="submit" className="w-full" disabled={!selectedGroup}>
                     <PlusCircle className="mr-2 h-4 w-4"/>
                     {dict.admin.candidates.addButton}
                   </Button>

@@ -41,16 +41,15 @@ interface Candidate {
   name: string;
   imageUrl: string;
   description: string;
+  groupId: string;
 }
 
 interface ElectionSettings {
     status: 'active' | 'ended';
     startDate?: string;
     endDate?: string;
+    activeGroupId?: string;
 }
-
-// TODO: Replace with dynamic group selection
-const GROUP_ID = "presidential_2024";
 
 export default function VotePage() {
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
@@ -64,19 +63,19 @@ export default function VotePage() {
   const { toast } = useToast();
   const { dict } = useDictionary();
   const db = useFirestore();
-
-  const candidatesQuery = useMemo(() => {
-    if (!db) return null;
-    // TODO: Filter candidates by selected group
-    return query(collection(db, 'candidates'));
-  }, [db]);
-
-  const { data: candidates, isLoading: candidatesLoading } = useCollection<Candidate>(
-    candidatesQuery ? 'candidates' : null,
-    candidatesQuery ?? undefined
-  );
   
   const { data: electionSettings, isLoading: settingsLoading } = useDoc<ElectionSettings>('settings/election');
+  const activeGroupId = electionSettings?.activeGroupId;
+  
+  const candidatesQuery = useMemo(() => {
+    if (!db || !activeGroupId) return null;
+    return query(collection(db, 'candidates'), where('groupId', '==', activeGroupId));
+  }, [db, activeGroupId]);
+
+  const { data: candidates, isLoading: candidatesLoading } = useCollection<Candidate>(
+    candidatesQuery ? `candidates-for-${activeGroupId}` : null,
+    candidatesQuery ?? undefined
+  );
   
   const electionStatus = useMemo(() => {
     if (!electionSettings) return "active";
@@ -88,8 +87,9 @@ export default function VotePage() {
 
     if (end && now > end) return 'ended';
     if (start && now < start) return 'pending';
+    if (!activeGroupId) return 'pending'; // No active group means no active election
     return 'active';
-  }, [electionSettings]);
+  }, [electionSettings, activeGroupId]);
 
 
   useEffect(() => {
@@ -109,23 +109,24 @@ export default function VotePage() {
 
 
   useEffect(() => {
-    if (!nationalId || !db) return;
+    if (!nationalId || !db || !activeGroupId) return;
 
     const fetchVoteStatus = async () => {
-        // TODO: check for vote in the selected group
-        const voteRef = doc(db, 'votes', `${nationalId}_${GROUP_ID}`);
+        const voteRef = doc(db, 'votes', `${nationalId}_${activeGroupId}`);
         const voteSnap = await getDoc(voteRef);
         if (voteSnap.exists()) {
             setHasVoted(true);
+        } else {
+            setHasVoted(false);
         }
     };
 
     fetchVoteStatus();
-  }, [nationalId, db]);
+  }, [nationalId, db, activeGroupId]);
 
 
   const handleVoteSubmit = () => {
-    if (!selectedCandidate || !nationalId || !db) {
+    if (!selectedCandidate || !nationalId || !db || !activeGroupId) {
         toast({
             variant: "destructive",
             title: dict.vote.noSelectionErrorTitle,
@@ -140,15 +141,15 @@ export default function VotePage() {
         nationalId: nationalId,
         candidateId: selectedCandidate.id,
         candidateName: selectedCandidate.name,
-        groupId: GROUP_ID, // TODO: Use dynamic group ID
+        groupId: activeGroupId,
         votedAt: serverTimestamp(),
     };
 
-    const voteRef = doc(db, 'votes', `${nationalId}_${GROUP_ID}`); // TODO: Use dynamic group ID
+    const voteRef = doc(db, 'votes', `${nationalId}_${activeGroupId}`);
 
     setDoc(voteRef, voteData)
       .then(() => {
-        const receipt = `receipt-${nationalId}-${GROUP_ID}-${Date.now()}`;
+        const receipt = `receipt-${nationalId}-${activeGroupId}-${Date.now()}`;
         toast({
           title: dict.vote.successToastTitle,
           description: dict.vote.successToastDescription,
@@ -219,7 +220,7 @@ export default function VotePage() {
     )
   }
 
-  if (electionStatus === 'ended' || electionStatus === 'pending') {
+  if (electionStatus !== 'active') {
     const title = electionStatus === 'ended' ? dict.vote.electionEndedTitle : dict.vote.electionPendingTitle;
     const description = electionStatus === 'ended' ? dict.vote.electionEndedDescription : dict.vote.electionPendingDescription;
 
