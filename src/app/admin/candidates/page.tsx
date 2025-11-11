@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useRef, useMemo } from "react";
@@ -23,10 +22,26 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useDictionary } from "@/hooks/use-dictionary";
-import { PlusCircle, Trash2, User, Upload, Layers } from "lucide-react";
+import { PlusCircle, Trash2, User, Upload, Layers, Search } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useFirestore, useCollection } from "@/firebase";
 import { collection, addDoc, deleteDoc, doc } from "firebase/firestore";
@@ -38,6 +53,7 @@ import { Textarea } from "@/components/ui/textarea";
 const formSchema = z.object({
   name: z.string().min(2, "Name is required."),
   description: z.string().min(10, "A short description is required."),
+  groupId: z.string().min(1, "An election group must be selected."),
   imageUrl: z.string().optional(),
   uploadedImage: z.any().optional(),
 }).refine(data => data.imageUrl || data.uploadedImage, {
@@ -45,25 +61,37 @@ const formSchema = z.object({
     path: ["imageUrl"],
 });
 
-type Candidate = { id: string, name: string, description: string, imageUrl: string };
+type Candidate = { id: string, name: string, description: string, imageUrl: string, groupId: string };
+type Group = { id: string, name: string };
 
 export default function CandidatesPage() {
   const { dict } = useDictionary();
   const { toast } = useToast();
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedGroupFilter, setSelectedGroupFilter] = useState("all");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const db = useFirestore();
 
   const { data: candidates, isLoading: candidatesLoading } = useCollection<Candidate>("candidates");
+  const { data: groups, isLoading: groupsLoading } = useCollection<Group>('groups');
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
       description: "",
+      groupId: "",
       imageUrl: "",
     },
   });
+
+  const filteredCandidates = useMemo(() => {
+    return candidates
+      ?.filter(c => selectedGroupFilter === 'all' || c.groupId === selectedGroupFilter)
+      .filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase()));
+  }, [candidates, selectedGroupFilter, searchTerm]);
+
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -83,7 +111,7 @@ export default function CandidatesPage() {
   const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const url = e.target.value;
     form.setValue("imageUrl", url);
-    setPreviewImage(url); // Show preview for URL as well
+    setPreviewImage(url);
     if (url) {
         form.setValue("uploadedImage", null);
         if(fileInputRef.current) {
@@ -92,7 +120,6 @@ export default function CandidatesPage() {
         form.clearErrors("imageUrl");
     }
   }
-
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     const imageUrl = values.imageUrl || previewImage;
@@ -109,6 +136,7 @@ export default function CandidatesPage() {
         name: values.name,
         description: values.description,
         imageUrl: imageUrl,
+        groupId: values.groupId,
     };
 
     const candidatesCol = collection(db, 'candidates');
@@ -155,74 +183,73 @@ export default function CandidatesPage() {
   };
 
   const renderCandidateList = () => {
-    if (candidatesLoading) {
+    const isLoading = candidatesLoading || groupsLoading;
+
+    if (isLoading) {
       return (
-        <div className="space-y-4">
-          <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-2">
-            {[...Array(2)].map((_, i) => (
-              <Card key={i} className="overflow-hidden">
-                <div className="flex items-start p-4 gap-4">
-                  <Skeleton className="h-24 w-24 rounded-full" />
-                  <div className="space-y-2 flex-1">
-                    <Skeleton className="h-6 w-3/4" />
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-5/6" />
-                    <Skeleton className="h-9 w-full mt-2" />
-                  </div>
+         <div className="space-y-2">
+            {[...Array(3)].map((_, i) => (
+                <div key={i} className="flex items-center p-4">
+                    <Skeleton className="h-10 w-10 rounded-full" />
+                    <div className="ml-4 space-y-2">
+                        <Skeleton className="h-4 w-40" />
+                    </div>
+                    <Skeleton className="ml-auto h-8 w-20" />
                 </div>
-              </Card>
             ))}
-          </div>
         </div>
       );
     }
     
-    if (candidates && candidates.length > 0) {
+    if (filteredCandidates && filteredCandidates.length > 0) {
       return (
-        <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-2">
-          {candidates.map((candidate) => (
-            <Card key={candidate.id} className="overflow-hidden flex flex-col">
-              <CardContent className="p-6 flex items-start gap-6">
-                <div className="relative h-24 w-24 rounded-full overflow-hidden flex-shrink-0">
-                   <Image 
-                      src={candidate.imageUrl}
-                      alt={`Portrait of ${candidate.name}`}
-                      fill
-                      className="object-cover"
-                      sizes="96px"
-                    />
-                </div>
-                <div className="flex-1">
-                    <CardTitle className="text-xl">{candidate.name}</CardTitle>
-                    <CardDescription className="mt-2 text-sm">
-                        {candidate.description}
-                    </CardDescription>
-                </div>
-              </CardContent>
-              <CardFooter className="p-6 pt-0 mt-auto">
-                <Button 
-                  variant="destructive" 
-                  size="sm" 
-                  className="w-full" 
-                  onClick={() => removeCandidate(candidate)}
-                >
-                  <Trash2 className="mr-2 h-4 w-4" /> 
-                  {dict.admin.candidates.removeButton}
-                </Button>
-              </CardFooter>
-            </Card>
-          ))}
-        </div>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>{dict.admin.candidates.nameLabel}</TableHead>
+              <TableHead>{dict.admin.groups.title}</TableHead>
+              <TableHead className="text-right">{dict.admin.candidates.removeButton}</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredCandidates.map((candidate) => {
+              const group = groups?.find(g => g.id === candidate.groupId);
+              return (
+                <TableRow key={candidate.id}>
+                  <TableCell className="font-medium">
+                    <div className="flex items-center gap-4">
+                      <Avatar>
+                        <AvatarImage src={candidate.imageUrl} alt={candidate.name} />
+                        <AvatarFallback>{candidate.name.charAt(0)}</AvatarFallback>
+                      </Avatar>
+                      <span>{candidate.name}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>{group?.name || 'N/A'}</TableCell>
+                  <TableCell className="text-right">
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      onClick={() => removeCandidate(candidate)}
+                    >
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
       );
     }
     
     return (
-        <div className="text-center py-10 border-2 border-dashed rounded-lg">
-          <User className="mx-auto h-12 w-12 text-muted-foreground" />
-          <p className="mt-4 text-muted-foreground">
-            {dict.admin.candidates.noCandidates}
-          </p>
-        </div>
+      <div className="text-center py-10 border-2 border-dashed rounded-lg">
+        <User className="mx-auto h-12 w-12 text-muted-foreground" />
+        <p className="mt-4 text-muted-foreground">
+          {dict.admin.candidates.noCandidates}
+        </p>
+      </div>
     );
   };
 
@@ -234,6 +261,26 @@ export default function CandidatesPage() {
           <Card>
             <CardHeader>
               <CardTitle>{dict.admin.candidates.title}</CardTitle>
+                <div className="flex flex-col sm:flex-row gap-4 pt-4">
+                    <div className="relative w-full sm:max-w-xs">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                        <Input 
+                            placeholder={dict.admin.history.searchPlaceholder.split('...')[0]}
+                            className="pl-10"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
+                    <Select value={selectedGroupFilter} onValueChange={setSelectedGroupFilter}>
+                        <SelectTrigger className="w-full sm:w-[200px]">
+                            <SelectValue placeholder={dict.admin.candidates.groupSelectPlaceholder} />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">All Groups</SelectItem>
+                            {groups?.map(g => <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
+                </div>
             </CardHeader>
             <CardContent>
               {renderCandidateList()}
@@ -249,6 +296,29 @@ export default function CandidatesPage() {
             <CardContent>
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                   <FormField
+                    control={form.control}
+                    name="groupId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{dict.admin.candidates.groupSelectLabel}</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value} disabled={groupsLoading}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder={dict.admin.candidates.groupSelectPlaceholder} />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {groups?.map(group => (
+                                <SelectItem key={group.id} value={group.id}>{group.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
                   <FormField
                     control={form.control}
                     name="name"
