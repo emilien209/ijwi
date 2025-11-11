@@ -4,7 +4,7 @@
 import { translateText, type MultilingualSupportInput } from "@/ai/flows/multilingual-support";
 import { analyzeVotingPatterns, type AnalyzeVotingPatternsInput } from "@/ai/flows/fraud-detection";
 import { verifyNationalId, type NidaVerificationInput, type NidaVerificationOutput } from "@/ai/flows/nida-verification";
-import { collection, query, where, getDocs, limit } from "firebase/firestore";
+import { collection, query, where, getDocs, limit, doc, getDoc } from "firebase/firestore";
 import { firestoreDb } from "@/firebase";
 
 export async function handleTranslation(input: MultilingualSupportInput) {
@@ -67,11 +67,10 @@ export async function handleVerifyVote(receipt: string): Promise<{ success: bool
   const voteId = `${nationalId}_${groupId}`;
 
   try {
-    const votesCol = collection(firestoreDb, 'votes');
-    const q = query(votesCol, where("__name__", "==", voteId), limit(1));
-    const voteSnap = await getDocs(q);
+    const voteRef = doc(firestoreDb, 'votes', voteId);
+    const voteSnap = await getDoc(voteRef);
 
-    if (!voteSnap.empty) {
+    if (voteSnap.exists()) {
       return { success: true };
     } else {
       return { success: false, error: "verify.failDescription" };
