@@ -9,7 +9,6 @@ export const fr: Dictionary = {
   navCandidates: "Candidats",
   navResults: "Résultats",
   navFraud: "Détection de Fraude",
-  navGroups: "Groupes",
   navHistory: "Historique",
 
   login: {
@@ -147,20 +146,6 @@ export const fr: Dictionary = {
         updateDatesSuccess: "Les dates de l'élection ont été mises à jour.",
         updateDatesError: "Impossible de mettre à jour les dates de l'élection.",
     },
-    groups: {
-        title: "Groupes Électoraux Actuels",
-        addTitle: "Ajouter un Groupe Électoral",
-        addDescription: "Créez une nouvelle catégorie pour les candidats, comme \"Présidentielle\" ou \"Parlementaire\".",
-        nameLabel: "Nom du Groupe",
-        namePlaceholder: "ex: Élection Présidentielle",
-        descriptionLabel: "Description du Groupe",
-        descriptionPlaceholder: "ex: Candidats pour la course présidentielle de 2024.",
-        addButton: "Ajouter le Groupe",
-        removeButton: "Supprimer",
-        noGroups: "Aucun groupe électoral n'a encore été créé.",
-        addSuccess: "Le groupe \"{groupName}\" a été créé.",
-        removeSuccess: "Le groupe \"{groupName}\" a été supprimé.",
-    },
     candidates: {
         title: "Candidats Actuels",
         addTitle: "Ajouter un Candidat",
@@ -221,5 +206,3 @@ export const fr: Dictionary = {
     analysisErrorDescription: "Une erreur est survenue lors de l'analyse des données.",
   }
 };
-
-    

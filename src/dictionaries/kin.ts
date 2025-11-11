@@ -9,7 +9,6 @@ export const kin: Dictionary = {
   navCandidates: "Abakandida",
   navResults: "Ibyavuye mu Matora",
   navFraud: "Gukumira Uburiganya",
-  navGroups: "Amatsinda",
   navHistory: "Amateka",
 
   login: {
@@ -147,20 +146,6 @@ export const kin: Dictionary = {
         updateDatesSuccess: "Amatariki y'amatora yavuguruwe.",
         updateDatesError: "Ntibishoboye kuvugurura amatariki y'amatora.",
     },
-    groups: {
-        title: "Amatsinda y'Amatora Ariho",
-        addTitle: "Ongeramo Itsinda ry'Amatora",
-        addDescription: "Kora itsinda rishya ry'abakandida, nka \"Abaperezida\" cyangwa \"Abadepite\".",
-        nameLabel: "Izina ry'Itsinda",
-        namePlaceholder: "Urugero: Amatora y'Abaperezida",
-        descriptionLabel: "Ubusobanuro bw'Itsinda",
-        descriptionPlaceholder: "Urugero: Abakandida mu matora ya perezida ya 2024.",
-        addButton: "Ongeramo Itsinda",
-        removeButton: "Siba",
-        noGroups: "Nta tsinda ry'amatora rirakorwa.",
-        addSuccess: "Itsinda \"{groupName}\" ryakozwe.",
-        removeSuccess: "Itsinda \"{groupName}\" ryasibwe.",
-    },
     candidates: {
         title: "Abakandida Bariho",
         addTitle: "Ongeramo Umukandida",
@@ -221,5 +206,3 @@ export const kin: Dictionary = {
     analysisErrorDescription: "Habaye ikosa mu gusesengura amakuru.",
   }
 };
-
-    

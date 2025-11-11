@@ -7,7 +7,6 @@ export const en = {
   navCandidates: "Candidates",
   navResults: "Results",
   navFraud: "Fraud Detection",
-  navGroups: "Groups",
   navHistory: "History",
 
   login: {
@@ -145,20 +144,6 @@ export const en = {
         updateDatesSuccess: "Election dates have been updated.",
         updateDatesError: "Could not update election dates.",
     },
-    groups: {
-        title: "Current Election Groups",
-        addTitle: "Add Election Group",
-        addDescription: "Create a new category for candidates, like \"Presidential\" or \"Parliamentary\".",
-        nameLabel: "Group Name",
-        namePlaceholder: "e.g., Presidential Election",
-        descriptionLabel: "Group Description",
-        descriptionPlaceholder: "e.g., Candidates for the 2024 presidential race.",
-        addButton: "Add Group",
-        removeButton: "Remove",
-        noGroups: "No election groups created yet.",
-        addSuccess: "Group \"{groupName}\" has been created.",
-        removeSuccess: "Group \"{groupName}\" has been removed.",
-    },
     candidates: {
         title: "Current Candidates",
         addTitle: "Add Candidate",
@@ -219,5 +204,3 @@ export const en = {
     analysisErrorDescription: "An error occurred while analyzing the data.",
   }
 };
-
-    

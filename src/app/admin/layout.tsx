@@ -10,7 +10,6 @@ import {
   Users,
   LogOut,
   Vote,
-  Group,
   History,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
