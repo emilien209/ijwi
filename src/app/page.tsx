@@ -157,9 +157,9 @@ export default function LoginPage() {
               <CardContent className="space-y-4 overflow-hidden">
                    <Alert variant="default" className="border-accent">
                     <Info className="h-4 w-4 text-accent" />
-                    <AlertTitle className="text-accent">Heads up! This is a demo application.</AlertTitle>
+                    <AlertTitle className="text-accent">Icyitonderwa: Iyi ni Porogaramu y'Igeragezwa</AlertTitle>
                     <AlertDescription>
-                        This platform is for demonstration purposes only and is not connected to any official election system. Do not use real personal information.
+                        Iyi porogaramu ni iy'ikitegererezo gusa, ntabwo ikoreshwa mu matora nyayo. Ntimukoreshe amakuru yanyu bwite y'ukuri.
                     </AlertDescription>
                 </Alert>
                   <AnimatePresence mode="wait">
@@ -290,5 +290,3 @@ export default function LoginPage() {
     </div>
   );
 }
-
-    

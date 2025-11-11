@@ -48,6 +48,7 @@ import { CalendarIcon } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 
 
 interface Vote {
@@ -290,7 +291,7 @@ export default function AdminDashboardPage() {
                                  <Button disabled={isUpdatingStatus} variant="secondary" className="w-full">
                                     {isUpdatingStatus && <Loader2 className="animate-spin" />} 
                                     {isUpdatingStatus ? dict.admin.dashboard.resettingButton : dict.admin.dashboard.resetElectionButton}
-                                </Button>
+                                 </Button>
                             </AlertDialogTrigger>
                             <AlertDialogContent>
                                 <AlertDialogHeader>
@@ -313,7 +314,7 @@ export default function AdminDashboardPage() {
                     )}
                  </div>
                  <div className="space-y-2 pt-4 border-t">
-                    <Label>Active Election Group</Label>
+                    <Label>Hitamo Itsinda ry'Itora</Label>
                     <div className="flex gap-2">
                         <Select value={selectedGroupId} onValueChange={setSelectedGroupId} disabled={isLoading}>
                             <SelectTrigger>
@@ -327,7 +328,7 @@ export default function AdminDashboardPage() {
                         </Select>
                          <Button onClick={handleSetActiveGroup} disabled={isUpdatingStatus || !selectedGroupId}>
                             {isUpdatingStatus && <Loader2 className="animate-spin" />}
-                            Set
+                            Emeza
                         </Button>
                     </div>
                  </div>
@@ -421,7 +422,3 @@ export default function AdminDashboardPage() {
     </div>
   );
 }
-
-    
-
-    
