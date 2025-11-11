@@ -11,6 +11,7 @@ import { ThemeSwitcher } from "./theme-switcher";
 
 const navLinks = [
     { href: "/dashboard", key: "navDashboard" },
+    { href: "/vote", key: "vote.title" },
     { href: "/results", key: "navResults" },
     { href: "/verify", key: "navVerify" },
 ];
