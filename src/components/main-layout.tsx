@@ -32,7 +32,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
 
   return (
       <div className="relative flex min-h-screen flex-col">
-        {!isLoginPage && <BackgroundCarousel images={imageUrls} />}
+        {isLoginPage && <BackgroundCarousel images={imageUrls} />}
         <div className="relative z-10 flex flex-1 flex-col">
             <Header />
             <main className="flex-1">{children}</main>
