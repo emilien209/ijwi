@@ -80,6 +80,18 @@ export default function CandidatesPage() {
     }
   };
 
+  const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const url = e.target.value;
+    form.setValue("imageUrl", url);
+    setPreviewImage(url); // Show preview for URL as well
+    form.setValue("uploadedImage", null);
+    if(fileInputRef.current) {
+        fileInputRef.current.value = "";
+    }
+    form.clearErrors("imageUrl");
+  }
+
+
   function onSubmit(values: z.infer<typeof formSchema>) {
     const imageUrl = values.imageUrl || previewImage;
 
@@ -274,12 +286,7 @@ export default function CandidatesPage() {
                               <Input 
                                 placeholder={dict.admin.candidates.photoUrlPlaceholder}
                                 {...field}
-                                onChange={(e) => {
-                                  field.onChange(e);
-                                  setPreviewImage(null);
-                                  form.setValue("uploadedImage", null);
-                                  form.clearErrors("imageUrl");
-                                }}
+                                onChange={handleUrlChange}
                               />
                             </FormControl>
                             <FormMessage />

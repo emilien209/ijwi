@@ -26,10 +26,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useDictionary } from "@/hooks/use-dictionary";
-import { Loader2, ShieldCheck, ArrowRight } from "lucide-react";
+import { Loader2, ShieldCheck, ArrowRight, Users } from "lucide-react";
 import { handleNidaVerification } from "@/app/actions";
 import { format, parse } from 'date-fns';
 import { AnimatePresence, motion } from "framer-motion";
+import { useCollection } from "@/firebase";
+import Image from "next/image";
+import { Skeleton } from "@/components/ui/skeleton";
 
 // This function attempts to parse a date string from various common formats
 const parseFlexibleDate = (dateString: string): Date | null => {
@@ -62,6 +65,13 @@ const formSchema = z.object({
   }),
 });
 
+interface Candidate {
+  id: string;
+  name: string;
+  imageUrl: string;
+  description: string;
+}
+
 
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -69,6 +79,7 @@ export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
   const { dict } = useDictionary();
+  const { data: candidates, isLoading: candidatesLoading } = useCollection<Candidate>("candidates");
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -129,94 +140,147 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center p-4">
-      <Card className="w-full max-w-md shadow-2xl bg-card/80">
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)}>
-            <CardHeader className="text-center">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 mb-4">
-                  <ShieldCheck className="h-8 w-8 text-primary" />
-              </div>
-              <CardTitle className="text-2xl font-bold font-headline text-primary">
-                {dict.login.title}
-              </CardTitle>
-              <CardDescription>{dict.login.description}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4 overflow-hidden">
-                <AnimatePresence mode="wait">
-                    <motion.div
-                        key={step}
-                        initial={{ opacity: 0, x: 50 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -50 }}
-                        transition={{ duration: 0.3 }}
-                    >
-                        {step === 'id' && (
-                             <FormField
-                                control={form.control}
-                                name="nationalId"
-                                render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>{dict.login.nationalIdLabel}</FormLabel>
-                                    <FormControl>
-                                    <Input
-                                        placeholder={dict.login.nationalIdPlaceholder}
-                                        {...field}
-                                        maxLength={16}
-                                        disabled={isLoading}
-                                    />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                                )}
-                            />
-                        )}
-                        {step === 'dob' && (
-                            <FormField
-                                control={form.control}
-                                name="dob"
-                                render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>{dict.login.dobLabel}</FormLabel>
-                                    <FormControl>
-                                    <Input
-                                        placeholder={dict.login.dobPlaceholder}
-                                        {...field}
-                                        disabled={isLoading}
-                                    />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                                )}
-                            />
-                        )}
-                   </motion.div>
-               </AnimatePresence>
-            </CardContent>
-            <CardFooter className="flex flex-col gap-4">
-                {step === 'id' ? (
-                     <Button type="button" className="w-full" onClick={handleNextStep}>
-                        Next <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
-                ) : (
-                    <div className="w-full space-y-2">
-                        <Button type="submit" className="w-full" disabled={isLoading}>
-                            {isLoading ? (
-                            <Loader2 className="animate-spin" />
-                            ) : (
-                            dict.login.loginButton
-                            )}
-                        </Button>
-                        <Button type="button" variant="outline" className="w-full" onClick={() => setStep('id')} disabled={isLoading}>
-                            Back
-                        </Button>
-                    </div>
-                )}
-             
-              <p className="text-xs text-muted-foreground text-center">{dict.login.supportText}</p>
-            </CardFooter>
-          </form>
-        </Form>
-      </Card>
+      <div className="container mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+        <Card className="w-full max-w-md shadow-2xl bg-card/80 mx-auto">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)}>
+              <CardHeader className="text-center">
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 mb-4">
+                    <ShieldCheck className="h-8 w-8 text-primary" />
+                </div>
+                <CardTitle className="text-2xl font-bold font-headline text-primary">
+                  {dict.login.title}
+                </CardTitle>
+                <CardDescription>{dict.login.description}</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4 overflow-hidden">
+                  <AnimatePresence mode="wait">
+                      <motion.div
+                          key={step}
+                          initial={{ opacity: 0, x: 50 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: -50 }}
+                          transition={{ duration: 0.3 }}
+                      >
+                          {step === 'id' && (
+                              <FormField
+                                  control={form.control}
+                                  name="nationalId"
+                                  render={({ field }) => (
+                                  <FormItem>
+                                      <FormLabel>{dict.login.nationalIdLabel}</FormLabel>
+                                      <FormControl>
+                                      <Input
+                                          placeholder={dict.login.nationalIdPlaceholder}
+                                          {...field}
+                                          maxLength={16}
+                                          disabled={isLoading}
+                                      />
+                                      </FormControl>
+                                      <FormMessage />
+                                  </FormItem>
+                                  )}
+                              />
+                          )}
+                          {step === 'dob' && (
+                              <FormField
+                                  control={form.control}
+                                  name="dob"
+                                  render={({ field }) => (
+                                  <FormItem>
+                                      <FormLabel>{dict.login.dobLabel}</FormLabel>
+                                      <FormControl>
+                                      <Input
+                                          placeholder={dict.login.dobPlaceholder}
+                                          {...field}
+                                          disabled={isLoading}
+                                      />
+                                      </FormControl>
+                                      <FormMessage />
+                                  </FormItem>
+                                  )}
+                              />
+                          )}
+                    </motion.div>
+                </AnimatePresence>
+              </CardContent>
+              <CardFooter className="flex flex-col gap-4">
+                  {step === 'id' ? (
+                      <Button type="button" className="w-full" onClick={handleNextStep}>
+                          Next <ArrowRight className="ml-2 h-4 w-4" />
+                      </Button>
+                  ) : (
+                      <div className="w-full space-y-2">
+                          <Button type="submit" className="w-full" disabled={isLoading}>
+                              {isLoading ? (
+                              <Loader2 className="animate-spin" />
+                              ) : (
+                              dict.login.loginButton
+                              )}
+                          </Button>
+                          <Button type="button" variant="outline" className="w-full" onClick={() => setStep('id')} disabled={isLoading}>
+                              Back
+                          </Button>
+                      </div>
+                  )}
+              
+                <p className="text-xs text-muted-foreground text-center">{dict.login.supportText}</p>
+              </CardFooter>
+            </form>
+          </Form>
+        </Card>
+        
+        <div className="w-full">
+            <Card className="bg-card/80 shadow-2xl">
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-primary font-headline">
+                        <Users /> {dict.navCandidates}
+                    </CardTitle>
+                    <CardDescription>{dict.vote.description}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                     {candidatesLoading ? (
+                        <div className="space-y-4">
+                            {[...Array(2)].map((_, i) => (
+                                <div key={i} className="flex items-center space-x-4">
+                                    <Skeleton className="h-16 w-16 rounded-full" />
+                                    <div className="space-y-2">
+                                        <Skeleton className="h-4 w-[150px]" />
+                                        <Skeleton className="h-4 w-[100px]" />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : candidates && candidates.length > 0 ? (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-h-[400px] overflow-y-auto p-1">
+                            {candidates.map(candidate => (
+                                <div key={candidate.id} className="flex items-center gap-4">
+                                    <div className="relative h-16 w-16 rounded-full overflow-hidden flex-shrink-0">
+                                        <Image 
+                                            src={candidate.imageUrl}
+                                            alt={`Portrait of ${candidate.name}`}
+                                            fill
+                                            className="object-cover"
+                                            sizes="64px"
+                                        />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-bold">{candidate.name}</h3>
+                                        <p className="text-sm text-muted-foreground line-clamp-2">{candidate.description}</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="text-center py-10">
+                            <p className="text-muted-foreground">{dict.vote.noCandidatesMessage}</p>
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+        </div>
+
+      </div>
     </div>
   );
 }
