@@ -47,6 +47,8 @@ import {
 import { CalendarIcon } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
 
 interface Vote {
     candidateId: string;
@@ -58,10 +60,16 @@ interface Candidate {
     name: string;
 }
 
+interface Group {
+    id: string;
+    name: string;
+}
+
 interface ElectionSettings {
     status: 'active' | 'ended';
     startDate?: string;
     endDate?: string;
+    activeGroupId?: string;
 }
 
 export default function AdminDashboardPage() {
@@ -69,9 +77,11 @@ export default function AdminDashboardPage() {
   const db = useFirestore();
   const { toast } = useToast();
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [selectedGroupId, setSelectedGroupId] = useState<string | undefined>();
 
   const { data: votes, isLoading: votesLoading } = useCollection<Vote>('votes');
   const { data: candidates, isLoading: candidatesLoading } = useCollection<Candidate>('candidates');
+  const { data: groups, isLoading: groupsLoading } = useCollection<Group>('groups');
   const { data: electionSettings, isLoading: settingsLoading } = useDoc<ElectionSettings>('settings/election');
   
   const [startDate, setStartDate] = useState<Date | undefined>();
@@ -84,6 +94,9 @@ export default function AdminDashboardPage() {
         }
         if (electionSettings.endDate) {
             setEndDate(parseISO(electionSettings.endDate));
+        }
+        if (electionSettings.activeGroupId) {
+            setSelectedGroupId(electionSettings.activeGroupId);
         }
     }
   }, [electionSettings]);
@@ -118,7 +131,28 @@ export default function AdminDashboardPage() {
 
   const totalVotes = useMemo(() => electionData.reduce((acc, curr) => acc + curr.votes, 0), [electionData]);
   
-  const isLoading = votesLoading || candidatesLoading || settingsLoading;
+  const isLoading = votesLoading || candidatesLoading || settingsLoading || groupsLoading;
+  
+  const handleSetActiveGroup = async () => {
+     if (!db || !selectedGroupId) {
+        toast({ variant: 'destructive', title: dict.admin.auth.errorTitle, description: dict.admin.candidates.noGroupSelected});
+        return;
+    };
+    setIsUpdatingStatus(true);
+    const settingsRef = doc(db, 'settings', 'election');
+    try {
+        await updateDoc(settingsRef, { 
+            activeGroupId: selectedGroupId,
+        });
+        toast({ title: dict.appName, description: "Active election group has been set." });
+    } catch (error) {
+        console.error("Error setting active group:", error);
+        toast({ variant: 'destructive', title: dict.admin.auth.errorTitle, description: "Could not set the active election group." });
+    } finally {
+        setIsUpdatingStatus(false);
+    }
+  }
+
 
   const handleSetDates = async () => {
     if (!db || !startDate || !endDate) {
@@ -176,6 +210,11 @@ export default function AdminDashboardPage() {
         // Delete all candidates
         const candidatesQuerySnapshot = await getDocs(collection(db, 'candidates'));
         candidatesQuerySnapshot.forEach(doc => batch.delete(doc.ref));
+        
+        // Delete all groups
+        const groupsQuerySnapshot = await getDocs(collection(db, 'groups'));
+        groupsQuerySnapshot.forEach(doc => batch.delete(doc.ref));
+
 
         // Reset election status and dates
         const settingsRef = doc(db, 'settings', 'election');
@@ -183,12 +222,14 @@ export default function AdminDashboardPage() {
             status: 'active',
             startDate: null,
             endDate: null,
+            activeGroupId: null,
         });
 
         await batch.commit();
 
         setStartDate(undefined);
         setEndDate(undefined);
+        setSelectedGroupId(undefined);
         toast({ title: dict.appName, description: dict.admin.dashboard.resetElectionSuccess });
 
     } catch (error) {
@@ -270,6 +311,25 @@ export default function AdminDashboardPage() {
                            {dict.admin.dashboard.endElectionButton}
                         </Button>
                     )}
+                 </div>
+                 <div className="space-y-2 pt-4 border-t">
+                    <Label>Active Election Group</Label>
+                    <div className="flex gap-2">
+                        <Select value={selectedGroupId} onValueChange={setSelectedGroupId} disabled={isLoading}>
+                            <SelectTrigger>
+                                <SelectValue placeholder={dict.admin.candidates.groupSelectPlaceholder} />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {groups?.map(group => (
+                                    <SelectItem key={group.id} value={group.id}>{group.name}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                         <Button onClick={handleSetActiveGroup} disabled={isUpdatingStatus || !selectedGroupId}>
+                            {isUpdatingStatus && <Loader2 className="animate-spin" />}
+                            Set
+                        </Button>
+                    </div>
                  </div>
                  <p className="text-sm text-muted-foreground pt-4 border-t">{dict.admin.dashboard.scheduleTitle}</p>
                   <div className="space-y-2">
@@ -361,5 +421,7 @@ export default function AdminDashboardPage() {
     </div>
   );
 }
+
+    
 
     
