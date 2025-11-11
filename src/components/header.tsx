@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -12,12 +13,18 @@ const navLinks = [
     { href: "/dashboard", key: "navDashboard" },
     { href: "/results", key: "navResults" },
     { href: "/verify", key: "navVerify" },
-    { href: "/admin", key: "navAdmin" },
 ];
 
 export function Header() {
   const { dict } = useDictionary();
   const pathname = usePathname();
+
+  // Hide header on admin login, and show a different header for the admin section
+  if (pathname.startsWith('/admin')) {
+      return null;
+  }
+  
+  const isHomePage = pathname === '/';
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/60 backdrop-blur">
@@ -28,23 +35,22 @@ export function Header() {
             <span className="font-bold font-headline">{dict.appName}</span>
           </Link>
         </div>
-        <nav className="hidden md:flex items-center space-x-6 text-sm font-medium flex-1">
-            {navLinks.map(link => (
-                <Link
-                    key={link.href}
-                    href={link.href}
-                    className={cn(
-                        "transition-colors hover:text-primary",
-                        pathname.startsWith(link.href) && link.href !== '/' ? "text-primary" : "text-muted-foreground",
-                        pathname === '/' && link.href === '/' && "text-primary",
-                         // Handle nested admin routes
-                        link.href === '/admin' && pathname.startsWith('/admin/') ? "text-primary" : ""
-                    )}
-                >
-                    {dict[link.key as keyof typeof dict]}
-                </Link>
-            ))}
-        </nav>
+        {!isHomePage && (
+            <nav className="hidden md:flex items-center space-x-6 text-sm font-medium flex-1">
+                {navLinks.map(link => (
+                    <Link
+                        key={link.href}
+                        href={link.href}
+                        className={cn(
+                            "transition-colors hover:text-primary",
+                            pathname.startsWith(link.href) ? "text-primary" : "text-muted-foreground"
+                        )}
+                    >
+                        {dict[link.key as keyof typeof dict]}
+                    </Link>
+                ))}
+            </nav>
+        )}
         <div className="flex flex-1 items-center justify-end space-x-2">
             <LanguageSwitcher />
             <ThemeSwitcher />
@@ -53,3 +59,5 @@ export function Header() {
     </header>
   );
 }
+
+    

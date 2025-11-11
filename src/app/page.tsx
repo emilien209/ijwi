@@ -157,9 +157,9 @@ export default function LoginPage() {
               <CardContent className="space-y-4 overflow-hidden">
                    <Alert variant="default" className="border-accent">
                     <Info className="h-4 w-4 text-accent" />
-                    <AlertTitle className="text-accent">Heads up!</AlertTitle>
+                    <AlertTitle className="text-accent">Heads up! This is a demo application.</AlertTitle>
                     <AlertDescription>
-                        This is a demo application for showcasing e-voting technology. It does not use real data and is not an official government platform.
+                        This platform is for demonstration purposes only and is not connected to any official election system. Do not use real personal information.
                     </AlertDescription>
                 </Alert>
                   <AnimatePresence mode="wait">

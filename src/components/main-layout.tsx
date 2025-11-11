@@ -1,8 +1,11 @@
+
 "use client";
 
 import { usePathname } from "next/navigation";
 import { Header } from "./header";
 import { BackgroundCarousel } from "./background-carousel";
+import { AdminHeader } from "./admin-header";
+
 
 const imageUrls = [
     "https://i.pinimg.com/736x/87/61/e7/8761e78a47397c2728a4761b25198b09.jpg",
@@ -15,18 +18,13 @@ const imageUrls = [
 
 export function MainLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const isAdminAuthPage = pathname === '/admin/auth';
   const isAdminSection = pathname.startsWith('/admin');
+  const isLoginPage = pathname === '/';
 
-  if (isAdminAuthPage) {
-    return <main>{children}</main>;
-  }
-
-  // Do not show background carousel for admin section
   if (isAdminSection) {
-      return (
+       return (
           <div className="relative flex min-h-screen flex-col">
-            <Header />
+            <AdminHeader />
             <main className="flex-1">{children}</main>
           </div>
       )
@@ -34,7 +32,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
 
   return (
       <div className="relative flex min-h-screen flex-col">
-        <BackgroundCarousel images={imageUrls} />
+        {!isLoginPage && <BackgroundCarousel images={imageUrls} />}
         <div className="relative z-10 flex flex-1 flex-col">
             <Header />
             <main className="flex-1">{children}</main>
@@ -42,3 +40,5 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
       </div>
   );
 }
+
+    

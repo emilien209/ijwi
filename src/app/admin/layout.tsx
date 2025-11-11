@@ -11,6 +11,7 @@ import {
   LogOut,
   Vote,
   History,
+  Layers
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -32,6 +33,7 @@ import { Button } from '@/components/ui/button';
 
 const adminNavLinks = [
     { href: "/admin", labelKey: "navDashboard", icon: LayoutDashboard },
+    { href: "/admin/groups", labelKey: "navGroups", icon: Layers },
     { href: "/admin/candidates", labelKey: "navCandidates", icon: Users },
     { href: "/admin/results", labelKey: "navResults", icon: BarChart2 },
     { href: "/admin/fraud-detection", labelKey: "navFraud", icon: Shield },
@@ -90,7 +92,7 @@ export default function AdminLayout({
             <SidebarHeader>
                  <div className="flex items-center gap-2 p-2">
                     <Vote className="h-6 w-6 text-primary" />
-                    <span className="font-bold">{dict.admin.title}</span>
+                    <span className="font-bold">{dict.appName} Admin</span>
                 </div>
             </SidebarHeader>
             <SidebarContent>
@@ -125,3 +127,5 @@ export default function AdminLayout({
     </SidebarProvider>
   );
 }
+
+    
