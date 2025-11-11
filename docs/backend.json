@@ -18,9 +18,13 @@
           "type": "string",
           "format": "uri",
           "description": "A URL pointing to a photo of the candidate."
+        },
+        "groupId": {
+            "type": "string",
+            "description": "The ID of the group this candidate belongs to."
         }
       },
-      "required": ["name", "imageUrl", "description"]
+      "required": ["name", "imageUrl", "description", "groupId"]
     },
     "vote": {
       "title": "Vote",

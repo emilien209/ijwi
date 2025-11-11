@@ -28,7 +28,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useDictionary } from "@/hooks/use-dictionary";
 import { Loader2, Vote as VoteIcon, Ban } from "lucide-react";
 import { useFirestore, useCollection, useDoc } from "@/firebase";
-import { doc, setDoc, serverTimestamp, getDoc } from "firebase/firestore";
+import { doc, setDoc, serverTimestamp, getDoc, query, where, collection } from "firebase/firestore";
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError } from "@/firebase/errors";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -49,6 +49,9 @@ interface ElectionSettings {
     endDate?: string;
 }
 
+// TODO: Replace with dynamic group selection
+const GROUP_ID = "presidential_2024";
+
 export default function VotePage() {
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -62,10 +65,18 @@ export default function VotePage() {
   const { dict } = useDictionary();
   const db = useFirestore();
 
-  const { data: candidates, isLoading: candidatesLoading } = useCollection<Candidate>("candidates");
-  const { data: electionSettings, isLoading: settingsLoading } = useDoc<ElectionSettings>('settings/election');
+  const candidatesQuery = useMemo(() => {
+    if (!db) return null;
+    // TODO: Filter candidates by selected group
+    return query(collection(db, 'candidates'));
+  }, [db]);
+
+  const { data: candidates, isLoading: candidatesLoading } = useCollection<Candidate>(
+    candidatesQuery ? 'candidates' : null,
+    candidatesQuery ?? undefined
+  );
   
-  const GROUP_ID = "presidential_2024"; // Static group ID since groups are removed
+  const { data: electionSettings, isLoading: settingsLoading } = useDoc<ElectionSettings>('settings/election');
   
   const electionStatus = useMemo(() => {
     if (!electionSettings) return "active";
@@ -101,6 +112,7 @@ export default function VotePage() {
     if (!nationalId || !db) return;
 
     const fetchVoteStatus = async () => {
+        // TODO: check for vote in the selected group
         const voteRef = doc(db, 'votes', `${nationalId}_${GROUP_ID}`);
         const voteSnap = await getDoc(voteRef);
         if (voteSnap.exists()) {
@@ -128,11 +140,11 @@ export default function VotePage() {
         nationalId: nationalId,
         candidateId: selectedCandidate.id,
         candidateName: selectedCandidate.name,
-        groupId: GROUP_ID,
+        groupId: GROUP_ID, // TODO: Use dynamic group ID
         votedAt: serverTimestamp(),
     };
 
-    const voteRef = doc(db, 'votes', `${nationalId}_${GROUP_ID}`);
+    const voteRef = doc(db, 'votes', `${nationalId}_${GROUP_ID}`); // TODO: Use dynamic group ID
 
     setDoc(voteRef, voteData)
       .then(() => {
@@ -253,7 +265,7 @@ export default function VotePage() {
             <div className="space-y-4">
                 {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-24 w-full rounded-lg" />)}
             </div>
-          ) : (
+          ) : candidates && candidates.length > 0 ? (
              <RadioGroup
                 value={selectedCandidate?.id ?? undefined}
                 onValueChange={(candidateId) => {
@@ -289,6 +301,13 @@ export default function VotePage() {
                 </Label>
                 ))}
             </RadioGroup>
+          ) : (
+             <div className="text-center py-10 border-2 border-dashed rounded-lg">
+                  <VoteIcon className="mx-auto h-12 w-12 text-muted-foreground" />
+                  <p className="mt-4 text-muted-foreground">
+                    {dict.vote.noCandidatesMessage}
+                  </p>
+                </div>
           )}
 
           <div className="mt-8 text-center">
@@ -333,5 +352,3 @@ export default function VotePage() {
     </div>
   );
 }
-
-    
