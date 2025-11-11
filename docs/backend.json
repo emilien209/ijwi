@@ -73,6 +73,22 @@
         }
       },
       "required": ["status"]
+    },
+    "group": {
+      "title": "Election Group",
+      "description": "A category for an election, e.g., 'Presidential' or 'Parliamentary'.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The name of the election group."
+        },
+        "description": {
+          "type": "string",
+          "description": "A short description of the group."
+        }
+      },
+      "required": ["name"]
     }
   },
   "auth": {
@@ -90,8 +106,10 @@
     "/settings/{settingId}": {
       "schema": { "$ref": "#/entities/electionSetting" },
       "description": "Collection for application-wide settings. E.g., 'election' doc for status."
+    },
+    "/groups/{groupId}": {
+      "schema": { "$ref": "#/entities/group" },
+      "description": "Collection of election groups or types."
     }
   }
 }
-
-    
