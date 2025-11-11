@@ -2,7 +2,7 @@
 import { type Dictionary } from '.';
 
 export const kin: Dictionary = {
-  appName: "Ijwi ry'Umuturage",
+  appName: "Igeragezwa ryo Gutora",
   navDashboard: "Ahabanza",
   navVerify: "Genzura Ijwi",
   navAdmin: "Ubuyobozi",

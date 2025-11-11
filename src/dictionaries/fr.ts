@@ -2,7 +2,7 @@
 import { type Dictionary } from '.';
 
 export const fr: Dictionary = {
-  appName: "La Voix du Citoyen",
+  appName: "Démo de Plateforme E-Voting",
   navDashboard: "Tableau de bord",
   navVerify: "Vérifier le Vote",
   navAdmin: "Panneau d'Admin",

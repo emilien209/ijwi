@@ -1,6 +1,6 @@
 
 export const en = {
-  appName: "Citizen's Voice",
+  appName: "E-Voting Platform Demo",
   navDashboard: "Dashboard",
   navVerify: "Verify Vote",
   navAdmin: "Admin Panel",

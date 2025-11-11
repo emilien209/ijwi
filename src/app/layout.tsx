@@ -14,7 +14,7 @@ const ptSans = PT_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Ijwi ry'Umuturage",
+  title: "E-Voting Platform Demo",
   description: 'Secure and Accessible E-Voting Platform',
 };
 
