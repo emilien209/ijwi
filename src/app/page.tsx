@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -25,9 +26,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useDictionary } from "@/hooks/use-dictionary";
-import { Loader2, ShieldCheck } from "lucide-react";
+import { Loader2, ShieldCheck, ArrowRight } from "lucide-react";
 import { handleNidaVerification } from "@/app/actions";
 import { format, parse } from 'date-fns';
+import { AnimatePresence, motion } from "framer-motion";
 
 // This function attempts to parse a date string from various common formats
 const parseFlexibleDate = (dateString: string): Date | null => {
@@ -63,6 +65,7 @@ const formSchema = z.object({
 
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
+  const [step, setStep] = useState<'id' | 'dob'>('id');
   const router = useRouter();
   const { toast } = useToast();
   const { dict } = useDictionary();
@@ -75,12 +78,18 @@ export default function LoginPage() {
     },
   });
 
+  const handleNextStep = async () => {
+    const isIdValid = await form.trigger("nationalId");
+    if (isIdValid) {
+        setStep('dob');
+    }
+  };
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
 
     const parsedDate = parseFlexibleDate(values.dob);
     if (!parsedDate) {
-        // This should theoretically not be reached due to Zod validation, but as a safeguard:
         toast({
             variant: "destructive",
             title: dict.login.loginErrorTitle,
@@ -132,51 +141,77 @@ export default function LoginPage() {
               </CardTitle>
               <CardDescription>{dict.login.description}</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <FormField
-                control={form.control}
-                name="nationalId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{dict.login.nationalIdLabel}</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder={dict.login.nationalIdPlaceholder}
-                        {...field}
-                        maxLength={16}
-                        disabled={isLoading}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-               <FormField
-                control={form.control}
-                name="dob"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{dict.login.dobLabel}</FormLabel>
-                    <FormControl>
-                       <Input
-                        placeholder={dict.login.dobPlaceholder}
-                        {...field}
-                        disabled={isLoading}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <CardContent className="space-y-4 overflow-hidden">
+                <AnimatePresence mode="wait">
+                    <motion.div
+                        key={step}
+                        initial={{ opacity: 0, x: 50 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -50 }}
+                        transition={{ duration: 0.3 }}
+                    >
+                        {step === 'id' && (
+                             <FormField
+                                control={form.control}
+                                name="nationalId"
+                                render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>{dict.login.nationalIdLabel}</FormLabel>
+                                    <FormControl>
+                                    <Input
+                                        placeholder={dict.login.nationalIdPlaceholder}
+                                        {...field}
+                                        maxLength={16}
+                                        disabled={isLoading}
+                                    />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                                )}
+                            />
+                        )}
+                        {step === 'dob' && (
+                            <FormField
+                                control={form.control}
+                                name="dob"
+                                render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>{dict.login.dobLabel}</FormLabel>
+                                    <FormControl>
+                                    <Input
+                                        placeholder={dict.login.dobPlaceholder}
+                                        {...field}
+                                        disabled={isLoading}
+                                    />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                                )}
+                            />
+                        )}
+                   </motion.div>
+               </AnimatePresence>
             </CardContent>
             <CardFooter className="flex flex-col gap-4">
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? (
-                  <Loader2 className="animate-spin" />
+                {step === 'id' ? (
+                     <Button type="button" className="w-full" onClick={handleNextStep}>
+                        Next <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
                 ) : (
-                  dict.login.loginButton
+                    <div className="w-full space-y-2">
+                        <Button type="submit" className="w-full" disabled={isLoading}>
+                            {isLoading ? (
+                            <Loader2 className="animate-spin" />
+                            ) : (
+                            dict.login.loginButton
+                            )}
+                        </Button>
+                        <Button type="button" variant="outline" className="w-full" onClick={() => setStep('id')} disabled={isLoading}>
+                            Back
+                        </Button>
+                    </div>
                 )}
-              </Button>
+             
               <p className="text-xs text-muted-foreground text-center">{dict.login.supportText}</p>
             </CardFooter>
           </form>
