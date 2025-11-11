@@ -23,20 +23,13 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useDictionary } from "@/hooks/use-dictionary";
 import { PlusCircle, Trash2, User, Upload, Layers } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useFirestore, useCollection } from "@/firebase";
-import { collection, addDoc, deleteDoc, doc, query, where } from "firebase/firestore";
+import { collection, addDoc, deleteDoc, doc } from "firebase/firestore";
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError } from "@/firebase/errors";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -52,28 +45,16 @@ const formSchema = z.object({
     path: ["imageUrl"],
 });
 
-type Candidate = { id: string, name: string, description: string, imageUrl: string, groupId: string };
-type Group = { id: string, name: string };
+type Candidate = { id: string, name: string, description: string, imageUrl: string };
 
 export default function CandidatesPage() {
   const { dict } = useDictionary();
   const { toast } = useToast();
   const [previewImage, setPreviewImage] = useState<string | null>(null);
-  const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const db = useFirestore();
 
-  const { data: groups, isLoading: groupsLoading } = useCollection<Group>('groups');
-  
-  const candidatesQuery = useMemo(() => {
-    if (!db || !selectedGroup) return null;
-    return query(collection(db, "candidates"), where("groupId", "==", selectedGroup));
-  }, [db, selectedGroup]);
-
-  const { data: candidates, isLoading: candidatesLoading } = useCollection<Candidate>(
-      candidatesQuery ? `candidates-for-${selectedGroup}` : null,
-      candidatesQuery ?? undefined
-  );
+  const { data: candidates, isLoading: candidatesLoading } = useCollection<Candidate>("candidates");
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -103,24 +84,17 @@ export default function CandidatesPage() {
     const url = e.target.value;
     form.setValue("imageUrl", url);
     setPreviewImage(url); // Show preview for URL as well
-    form.setValue("uploadedImage", null);
-    if(fileInputRef.current) {
-        fileInputRef.current.value = "";
+    if (url) {
+        form.setValue("uploadedImage", null);
+        if(fileInputRef.current) {
+            fileInputRef.current.value = "";
+        }
+        form.clearErrors("imageUrl");
     }
-    form.clearErrors("imageUrl");
   }
 
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    if (!selectedGroup) {
-        toast({
-            variant: "destructive",
-            title: dict.appName,
-            description: "Please select a group first.",
-        });
-        return;
-    }
-
     const imageUrl = values.imageUrl || previewImage;
     if (!imageUrl) {
         toast({
@@ -135,7 +109,6 @@ export default function CandidatesPage() {
         name: values.name,
         description: values.description,
         imageUrl: imageUrl,
-        groupId: selectedGroup,
     };
 
     const candidatesCol = collection(db, 'candidates');
@@ -182,17 +155,6 @@ export default function CandidatesPage() {
   };
 
   const renderCandidateList = () => {
-    if (!selectedGroup) {
-      return (
-        <div className="text-center py-10 border-2 border-dashed rounded-lg">
-          <Layers className="mx-auto h-12 w-12 text-muted-foreground" />
-          <p className="mt-4 text-muted-foreground">
-            {dict.admin.candidates.noGroupSelected}
-          </p>
-        </div>
-      );
-    }
-
     if (candidatesLoading) {
       return (
         <div className="space-y-4">
@@ -272,25 +234,6 @@ export default function CandidatesPage() {
           <Card>
             <CardHeader>
               <CardTitle>{dict.admin.candidates.title}</CardTitle>
-               <div className="pt-2">
-                <Label>{dict.admin.candidates.groupSelectLabel}</Label>
-                <Select onValueChange={setSelectedGroup} value={selectedGroup || ''}>
-                    <SelectTrigger>
-                        <SelectValue placeholder={dict.admin.candidates.groupSelectPlaceholder} />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {groupsLoading ? (
-                            <SelectItem value="loading" disabled>Loading...</SelectItem>
-                        ) : (
-                            groups?.map(group => (
-                                <SelectItem key={group.id} value={group.id}>
-                                    {group.name}
-                                </SelectItem>
-                            ))
-                        )}
-                    </SelectContent>
-                </Select>
-               </div>
             </CardHeader>
             <CardContent>
               {renderCandidateList()}
@@ -316,7 +259,6 @@ export default function CandidatesPage() {
                           <Input 
                             placeholder={dict.admin.candidates.namePlaceholder} 
                             {...field} 
-                            disabled={!selectedGroup}
                           />
                         </FormControl>
                         <FormMessage />
@@ -334,7 +276,6 @@ export default function CandidatesPage() {
                           <Textarea
                             placeholder={dict.admin.candidates.descriptionPlaceholder}
                             {...field}
-                            disabled={!selectedGroup}
                           />
                         </FormControl>
                         <FormMessage />
@@ -344,8 +285,8 @@ export default function CandidatesPage() {
 
                   <Tabs defaultValue="url" className="w-full">
                     <TabsList className="grid w-full grid-cols-2">
-                      <TabsTrigger value="url" disabled={!selectedGroup}>{dict.admin.candidates.tabUrl}</TabsTrigger>
-                      <TabsTrigger value="upload" disabled={!selectedGroup}>{dict.admin.candidates.tabUpload}</TabsTrigger>
+                      <TabsTrigger value="url">{dict.admin.candidates.tabUrl}</TabsTrigger>
+                      <TabsTrigger value="upload">{dict.admin.candidates.tabUpload}</TabsTrigger>
                     </TabsList>
                     
                     <TabsContent value="url" className="pt-4">
@@ -360,7 +301,6 @@ export default function CandidatesPage() {
                                 placeholder={dict.admin.candidates.photoUrlPlaceholder}
                                 {...field}
                                 onChange={handleUrlChange}
-                                disabled={!selectedGroup}
                               />
                             </FormControl>
                             <FormMessage />
@@ -378,7 +318,7 @@ export default function CandidatesPage() {
                             <FormLabel>{dict.admin.candidates.uploadLabel}</FormLabel>
                             <FormControl>
                               <div className="flex items-center justify-center w-full">
-                                <label htmlFor="dropzone-file" className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg bg-muted ${!selectedGroup ? 'cursor-not-allowed' : 'cursor-pointer hover:bg-muted/80'}`}>
+                                <label htmlFor="dropzone-file" className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg bg-muted cursor-pointer hover:bg-muted/80">
                                   <div className="flex flex-col items-center justify-center pt-5 pb-6">
                                     <Upload className="w-8 h-8 mb-2 text-muted-foreground"/>
                                     <p className="mb-2 text-sm text-center text-muted-foreground">
@@ -393,7 +333,6 @@ export default function CandidatesPage() {
                                     onChange={handleFileChange} 
                                     accept="image/png, image/jpeg, image/gif" 
                                     ref={fileInputRef}
-                                    disabled={!selectedGroup}
                                   />
                                 </label>
                               </div> 
@@ -417,7 +356,7 @@ export default function CandidatesPage() {
                     </div>
                   )}
 
-                  <Button type="submit" className="w-full" disabled={!selectedGroup}>
+                  <Button type="submit" className="w-full">
                     <PlusCircle className="mr-2 h-4 w-4"/>
                     {dict.admin.candidates.addButton}
                   </Button>
