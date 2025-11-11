@@ -18,7 +18,7 @@ export const en = {
     dobLabel: "Date of Birth",
     dobPlaceholder: "YYYY-MM-DD",
     loginButton: "Secure Login",
-    supportText: "Having trouble? Call 0800-XXX for support.",
+    supportText: "This is a demo. For real elections, refer to official sources.",
     loginSuccessTitle: "Verification Successful",
     loginSuccessDescription: "Welcome, {voterName}! Redirecting you to the dashboard...",
     loginErrorTitle: "Verification Failed",
@@ -90,7 +90,7 @@ export const en = {
     verifyButton: "Verify",
     verifyingButton: "Verifying...",
     successTitle: "Vote Verified!",
-    successDescription: "Your vote has been successfully found in the official, anonymous ballot box.",
+    successDescription: "Your vote has been successfully found in the official, anonymous ballot box of this demo application.",
     failTitle: "Verification Failed",
     failDescription: "This receipt code was not found. Please double-check the code or ensure you have voted.",
     invalidReceipt: "Invalid receipt format.",
@@ -221,3 +221,5 @@ export const en = {
     analysisErrorDescription: "An error occurred while analyzing the data.",
   }
 };
+
+    

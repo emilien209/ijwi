@@ -20,7 +20,7 @@ export const fr: Dictionary = {
     dobLabel: "Date de Naissance",
     dobPlaceholder: "AAAA-MM-JJ",
     loginButton: "Connexion Sécurisée",
-    supportText: "Un problème ? Appelez le 0800-XXX pour de l'aide.",
+    supportText: "Ceci est une démo. Pour les vraies élections, consultez les sources officielles.",
     loginSuccessTitle: "Vérification Réussie",
     loginSuccessDescription: "Bienvenue, {voterName} ! Redirection vers le tableau de bord...",
     loginErrorTitle: "Échec de la Vérification",
@@ -92,7 +92,7 @@ export const fr: Dictionary = {
     verifyButton: "Vérifier",
     verifyingButton: "Vérification...",
     successTitle: "Vote Vérifié !",
-    successDescription: "Votre vote a été trouvé avec succès dans l'urne officielle et anonyme.",
+    successDescription: "Votre vote a été trouvé avec succès dans l'urne officielle et anonyme de cette application de démonstration.",
     failTitle: "Échec de la Vérification",
     failDescription: "Ce code de reçu n'a pas été trouvé. Veuillez vérifier le code ou vous assurer d'avoir voté.",
     invalidReceipt: "Format de reçu invalide.",
@@ -223,3 +223,5 @@ export const fr: Dictionary = {
     analysisErrorDescription: "Une erreur est survenue lors de l'analyse des données.",
   }
 };
+
+    

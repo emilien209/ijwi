@@ -56,7 +56,7 @@ export default function VerifyPage() {
     const result = await handleVerifyVote(values.receipt);
     
     if (result.success) {
-      setVerificationStatus({ status: "success" });
+      setVerificationStatus({ status: "success", message: dict.verify.successDescription });
     } else {
       const errorMessage = result.error ? dict.verify[result.error as keyof typeof dict.verify] : dict.verify.failDescription;
       setVerificationStatus({ status: "fail", message: errorMessage });
@@ -100,7 +100,7 @@ export default function VerifyPage() {
                   <CheckCircle className="h-4 w-4 text-green-600" />
                   <AlertTitle>{dict.verify.successTitle}</AlertTitle>
                   <AlertDescription className="text-green-700">
-                    {dict.verify.successDescription}
+                    {verificationStatus.message}
                   </AlertDescription>
                 </Alert>
               )}
@@ -136,3 +136,5 @@ export default function VerifyPage() {
     </div>
   );
 }
+
+    

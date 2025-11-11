@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -62,11 +63,11 @@ export default function DashboardPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
                 <div>
                     <p className="text-sm font-semibold text-muted-foreground">{dict.dashboard.startsLabel}</p>
-                    <p className="text-lg font-bold">Oct 25, 2024</p>
+                    <p className="text-lg font-bold">Jul 15, 2024</p>
                 </div>
                 <div>
                     <p className="text-sm font-semibold text-muted-foreground">{dict.dashboard.endsLabel}</p>
-                    <p className="text-lg font-bold">Nov 5, 2024</p>
+                    <p className="text-lg font-bold">Jul 15, 2024</p>
                 </div>
                 <div>
                     <p className="text-sm font-semibold text-muted-foreground">{dict.dashboard.statusLabel}</p>
@@ -87,3 +88,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    

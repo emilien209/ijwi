@@ -26,13 +26,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useDictionary } from "@/hooks/use-dictionary";
-import { Loader2, ShieldCheck, ArrowRight, Users } from "lucide-react";
+import { Loader2, ShieldCheck, ArrowRight, Users, Info } from "lucide-react";
 import { handleNidaVerification } from "@/app/actions";
 import { format, parse } from 'date-fns';
 import { AnimatePresence, motion } from "framer-motion";
 import { useCollection } from "@/firebase";
 import Image from "next/image";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 // This function attempts to parse a date string from various common formats
 const parseFlexibleDate = (dateString: string): Date | null => {
@@ -154,6 +155,13 @@ export default function LoginPage() {
                 <CardDescription>{dict.login.description}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4 overflow-hidden">
+                   <Alert variant="default" className="border-accent">
+                    <Info className="h-4 w-4 text-accent" />
+                    <AlertTitle className="text-accent">Heads up!</AlertTitle>
+                    <AlertDescription>
+                        This is a demo application for showcasing e-voting technology. It does not use real data and is not an official government platform.
+                    </AlertDescription>
+                </Alert>
                   <AnimatePresence mode="wait">
                       <motion.div
                           key={step}
@@ -223,8 +231,6 @@ export default function LoginPage() {
                           </Button>
                       </div>
                   )}
-              
-                <p className="text-xs text-muted-foreground text-center">{dict.login.supportText}</p>
               </CardFooter>
             </form>
           </Form>
@@ -284,3 +290,5 @@ export default function LoginPage() {
     </div>
   );
 }
+
+    

@@ -20,7 +20,7 @@ export const kin: Dictionary = {
     dobLabel: "Itariki y'Amavuko",
     dobPlaceholder: "YYYY-MM-DD",
     loginButton: "Injira mu Bwirinzi",
-    supportText: "Wagize ikibazo? Hamagara 0800-XXX",
+    supportText: "Iri ni igeragezwa. Ku matora nyayo,ifashishe inzego zibishinzwe.",
     loginSuccessTitle: "Kwemeza Umwirondoro Byagenze Neza",
     loginSuccessDescription: "Ikaze, {voterName}! Tukuyoboye ku ipaji y'itora...",
     loginErrorTitle: "Kwemeza Umwirondoro Byanze",
@@ -92,7 +92,7 @@ export const kin: Dictionary = {
     verifyButton: "Genzura",
     verifyingButton: "Kugenzura...",
     successTitle: "Ijwi Ryagenzuwe!",
-    successDescription: "Ijwi ryawe ryabonetse neza mu isanduku y'itora rusange kandi y'ibanga.",
+    successDescription: "Ijwi ryawe ryabonetse neza mu isanduku y'itora rusange kandi y'ibanga y'iri geragezwa.",
     failTitle: "Kugenzura Byanze",
     failDescription: "Iyi kode y'inyemezabwishyu ntabwo yabonetse. Nyamuneka, reba neza kode cyangwa umenye neza ko watoye.",
     invalidReceipt: "Imiterere ya kode y'inyemezabwishyu siyo.",
@@ -223,3 +223,5 @@ export const kin: Dictionary = {
     analysisErrorDescription: "Habaye ikosa mu gusesengura amakuru.",
   }
 };
+
+    
