@@ -9,11 +9,13 @@
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'genkit';
+import { z } from 'zod';
 
 const NidaVerificationInputSchema = z.object({
   nationalId: z.string().length(16, "National ID must be 16 digits.").describe("The 16-digit national ID number to verify."),
   dob: z.string().describe("The user's date of birth as a YYYY-MM-DD string."),
+  akarere: z.string().min(1, "District is required.").describe("The user's district of residence (Akarere)."),
+  umurenge: z.string().min(1, "Sector is required.").describe("The user's sector of residence (Umurenge).")
 });
 export type NidaVerificationInput = z.infer<typeof NidaVerificationInputSchema>;
 
@@ -28,12 +30,12 @@ export type NidaVerificationOutput = z.infer<typeof NidaVerificationOutputSchema
 const checkNidaDatabaseTool = ai.defineTool(
     {
         name: 'checkNidaDatabase',
-        description: 'Checks if a Rwandan National ID and Date of Birth (as YYYY-MM-DD string) match in a mock NIDA database. For this simulation, all 16-digit numbers are considered valid and the year of birth must match the one in the ID.',
-        inputSchema: z.object({ nationalId: z.string(), dob: z.string() }),
+        description: 'Checks if a Rwandan National ID, Date of Birth (as YYYY-MM-DD string), District (Akarere), and Sector (Umurenge) match in a mock NIDA database. For this simulation, all 16-digit numbers are considered valid, the year of birth must match the one in the ID, and location is loosely checked.',
+        inputSchema: z.object({ nationalId: z.string(), dob: z.string(), akarere: z.string(), umurenge: z.string() }),
         outputSchema: z.object({
             isRegistered: z.boolean(),
             fullName: z.string().optional(),
-            reason: z.enum(["ID_DOB_MISMATCH", "NOT_FOUND", "VALID"]).optional(),
+            reason: z.enum(["ID_DOB_MISMATCH", "LOCATION_MISMATCH", "NOT_FOUND", "VALID"]).optional(),
         })
     },
     async (input) => {
@@ -49,6 +51,13 @@ const checkNidaDatabaseTool = ai.defineTool(
 
         if (birthYearFromId !== birthYearFromDob) {
             return { isRegistered: false, reason: "ID_DOB_MISMATCH" };
+        }
+
+        // Simulate a location check. For this demo, we'll just check if the strings are not empty
+        // and pretend some common districts are valid.
+        const validDistricts = ["Gasabo", "Kicukiro", "Nyarugenge", "Huye", "Musanze", "Rubavu"];
+        if (!input.akarere || !input.umurenge || !validDistricts.includes(input.akarere)) {
+             return { isRegistered: false, reason: "LOCATION_MISMATCH" };
         }
 
         // Simulate a name based on the ID for demo purposes
@@ -72,7 +81,7 @@ const prompt = ai.definePrompt({
   name: 'nidaVerificationPrompt',
   input: { schema: NidaVerificationInputSchema },
   output: { schema: NidaVerificationOutputSchema },
-  system: "You are a citizen identity verification agent for the National Identification Agency (NIDA) of Rwanda. Your task is to use the provided tool to check if a national ID and date of birth are registered. If verification fails, you must provide the reason. Then format the output.",
+  system: "You are a citizen identity verification agent for the National Identification Agency (NIDA) of Rwanda. Your task is to use the provided tool to check if a national ID, date of birth, and location details are registered. If verification fails, you must provide the reason. Then format the output.",
   tools: [checkNidaDatabaseTool]
 });
 

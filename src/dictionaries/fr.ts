@@ -26,6 +26,7 @@ export const fr: Dictionary = {
     loginErrorTitle: "Échec de la Vérification",
     loginErrorDefault: "L'ID national ou la date de naissance est incorrect. Veuillez réessayer.",
     loginErrorMismatch: "Votre ID National est correct, mais ne correspond pas à la date de naissance fournie.",
+    loginErrorLocationMismatch: "Les détails de localisation (District/Secteur) ne correspondent pas à nos dossiers.",
     loginErrorService: "Impossible de se connecter au service de vérification. Veuillez réessayer plus tard.",
     invalidDate: "Format de date invalide. Veuillez entrer une date valide.",
   },
@@ -223,5 +224,3 @@ export const fr: Dictionary = {
     analysisErrorDescription: "Une erreur est survenue lors de l'analyse des données.",
   }
 };
-
-    

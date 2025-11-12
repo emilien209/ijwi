@@ -2,7 +2,7 @@
 import { type Dictionary } from '.';
 
 export const kin: Dictionary = {
-  appName: "Igeragezwa ryo Gutora",
+  appName: "E-Voting Platform Demo",
   navDashboard: "Ahabanza",
   navVerify: "Genzura Ijwi",
   navAdmin: "Ubuyobozi",
@@ -26,6 +26,7 @@ export const kin: Dictionary = {
     loginErrorTitle: "Kwemeza Umwirondoro Byanze",
     loginErrorDefault: "Indangamuntu cyangwa Itariki y'amavuko si byo. Nyamuneka ongera ugerageze.",
     loginErrorMismatch: "Indangamuntu yawe ni yo, ariko ntihura n'itariki y'amavuko watanze.",
+    loginErrorLocationMismatch: "Amakuru y'aho utuye (Akarere/Umurenge) ntahuye n'ayo dufite.",
     loginErrorService: "Ntibishoboye guhuzwa na serivisi yo kugenzura. Nyamuneka ongera ugerageze.",
     invalidDate: "Itariki yanditse nabi. Nyamuneka injiza itariki nyayo.",
   },
@@ -223,5 +224,3 @@ export const kin: Dictionary = {
     analysisErrorDescription: "Habaye ikosa mu gusesengura amakuru.",
   }
 };
-
-    

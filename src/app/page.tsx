@@ -64,6 +64,8 @@ const formSchema = z.object({
   dob: z.string().refine((val) => val && parseFlexibleDate(val) !== null, {
     message: "Invalid date format. Please enter a valid date.",
   }),
+  akarere: z.string().min(1, "District is required."),
+  umurenge: z.string().min(1, "Sector is required."),
 });
 
 interface Candidate {
@@ -73,10 +75,12 @@ interface Candidate {
   description: string;
 }
 
+type Step = 'id' | 'dob' | 'location';
+
 
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
-  const [step, setStep] = useState<'id' | 'dob'>('id');
+  const [step, setStep] = useState<Step>('id');
   const router = useRouter();
   const { toast } = useToast();
   const { dict } = useDictionary();
@@ -87,13 +91,18 @@ export default function LoginPage() {
     defaultValues: {
       nationalId: "",
       dob: "",
+      akarere: "",
+      umurenge: ""
     },
   });
 
   const handleNextStep = async () => {
-    const isIdValid = await form.trigger("nationalId");
-    if (isIdValid) {
-        setStep('dob');
+    if (step === 'id') {
+        const isIdValid = await form.trigger("nationalId");
+        if (isIdValid) setStep('dob');
+    } else if (step === 'dob') {
+        const isDobValid = await form.trigger("dob");
+        if (isDobValid) setStep('location');
     }
   };
 
@@ -116,6 +125,8 @@ export default function LoginPage() {
     const result = await handleNidaVerification({
       nationalId: values.nationalId,
       dob: formattedDob,
+      akarere: values.akarere,
+      umurenge: values.umurenge,
     });
 
     if (result.success && result.data?.fullName) {
@@ -139,6 +150,34 @@ export default function LoginPage() {
     }
   }
 
+  const renderStepButtons = () => {
+      if (step === 'location') {
+          return (
+             <div className="w-full space-y-2">
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading ? ( <Loader2 className="animate-spin" /> ) : ( dict.login.loginButton )}
+                </Button>
+                <Button type="button" variant="outline" className="w-full" onClick={() => setStep('dob')} disabled={isLoading}>
+                    Back
+                </Button>
+            </div>
+          )
+      }
+
+      return (
+         <div className="w-full space-y-2">
+            <Button type="button" className="w-full" onClick={handleNextStep}>
+                Next <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+             {step === 'dob' && (
+                 <Button type="button" variant="outline" className="w-full" onClick={() => setStep('id')} disabled={isLoading}>
+                    Back
+                </Button>
+            )}
+        </div>
+      )
+  }
+
   return (
     <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center p-4">
       <div className="container mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
@@ -154,7 +193,7 @@ export default function LoginPage() {
                 </CardTitle>
                 <CardDescription>{dict.login.description}</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4 overflow-hidden">
+              <CardContent className="space-y-4 overflow-hidden min-h-[160px]">
                    <Alert variant="default" className="border-accent">
                     <Info className="h-4 w-4 text-accent" />
                     <AlertTitle className="text-accent">Demonstration Only</AlertTitle>
@@ -209,28 +248,49 @@ export default function LoginPage() {
                                   )}
                               />
                           )}
+                          {step === 'location' && (
+                              <div className="space-y-4">
+                                  <FormField
+                                      control={form.control}
+                                      name="akarere"
+                                      render={({ field }) => (
+                                      <FormItem>
+                                          <FormLabel>Akarere (District)</FormLabel>
+                                          <FormControl>
+                                          <Input
+                                              placeholder="e.g., Gasabo"
+                                              {...field}
+                                              disabled={isLoading}
+                                          />
+                                          </FormControl>
+                                          <FormMessage />
+                                      </FormItem>
+                                      )}
+                                  />
+                                   <FormField
+                                      control={form.control}
+                                      name="umurenge"
+                                      render={({ field }) => (
+                                      <FormItem>
+                                          <FormLabel>Umurenge (Sector)</FormLabel>
+                                          <FormControl>
+                                          <Input
+                                              placeholder="e.g., Remera"
+                                              {...field}
+                                              disabled={isLoading}
+                                          />
+                                          </FormControl>
+                                          <FormMessage />
+                                      </FormItem>
+                                      )}
+                                  />
+                              </div>
+                          )}
                     </motion.div>
                 </AnimatePresence>
               </CardContent>
               <CardFooter className="flex flex-col gap-4">
-                  {step === 'id' ? (
-                      <Button type="button" className="w-full" onClick={handleNextStep}>
-                          Next <ArrowRight className="ml-2 h-4 w-4" />
-                      </Button>
-                  ) : (
-                      <div className="w-full space-y-2">
-                          <Button type="submit" className="w-full" disabled={isLoading}>
-                              {isLoading ? (
-                              <Loader2 className="animate-spin" />
-                              ) : (
-                              dict.login.loginButton
-                              )}
-                          </Button>
-                          <Button type="button" variant="outline" className="w-full" onClick={() => setStep('id')} disabled={isLoading}>
-                              Back
-                          </Button>
-                      </div>
-                  )}
+                  {renderStepButtons()}
               </CardFooter>
             </form>
           </Form>

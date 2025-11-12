@@ -38,6 +38,8 @@ export async function handleNidaVerification(input: NidaVerificationInput): Prom
     let errorMessage = "loginErrorDefault"; // Default error key
     if (result.reason === "ID_DOB_MISMATCH") {
       errorMessage = "loginErrorMismatch";
+    } else if (result.reason === "LOCATION_MISMATCH") {
+        errorMessage = "loginErrorLocationMismatch";
     }
 
     return { success: false, error: errorMessage, data: result };

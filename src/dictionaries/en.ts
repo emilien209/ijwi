@@ -24,6 +24,7 @@ export const en = {
     loginErrorTitle: "Verification Failed",
     loginErrorDefault: "Invalid National ID or Date of Birth. Please try again.",
     loginErrorMismatch: "Your National ID is correct, but does not match the Date of Birth provided.",
+    loginErrorLocationMismatch: "The location details (District/Sector) do not match our records.",
     loginErrorService: "Could not connect to the verification service. Please try again later.",
     invalidDate: "Invalid date format. Please enter a valid date.",
   },
@@ -221,5 +222,3 @@ export const en = {
     analysisErrorDescription: "An error occurred while analyzing the data.",
   }
 };
-
-    
