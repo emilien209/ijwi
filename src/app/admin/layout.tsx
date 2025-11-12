@@ -13,7 +13,6 @@ import {
   History,
   Layers
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import {
   SidebarProvider,
   Sidebar,
@@ -33,7 +32,6 @@ import { Button } from '@/components/ui/button';
 
 const adminNavLinks = [
     { href: "/admin", labelKey: "navDashboard", icon: LayoutDashboard },
-    { href: "/admin/groups", labelKey: "navGroups", icon: Layers },
     { href: "/admin/candidates", labelKey: "navCandidates", icon: Users },
     { href: "/admin/results", labelKey: "navResults", icon: BarChart2 },
     { href: "/admin/fraud-detection", labelKey: "navFraud", icon: Shield },
